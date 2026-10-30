@@ -1,0 +1,6 @@
+{
+  "appId": "com.vedickundli.app",
+  "appName": "Vedic Kundli",
+  "webDir": "www",
+  "server": { "androidScheme": "https" }
+}

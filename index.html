@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+=====================================================================
+VK BUILD MANIFEST  (read this first; keep it updated at the end of every part)
+Project : Vedic Kundli tool -> upgrade to "advanced, verified-accurate" in 9 parts
+Status  : PARTS DONE = 1,2,3,4,5,6,7,8,9   |   NEXT PART = none (ALL 9 DONE)   |   TOTAL = 9
+Page note: this comment is invisible to visitors. Strip it only after Part 9.
+
+HOW TO CONTINUE IN A NEW CHAT
+ 1. Read this whole manifest, then read the code between the markers  /*==PART-n==*/ ... /*==END PART-n==*/ of finished parts.
+ 2. Build ONLY the NEXT PART. Do not rewrite or break earlier parts. Same single-file, no-build-step, vanilla JS.
+ 3. Reply to the user in the language they write (Hindi/Hinglish). Keep existing design, AdSense block (VK_ADS), saved profiles, tabs.
+ 4. Every part must: (a) add its own self-tests to selfTest() using published/mathematical reference values or invariants,
+    (b) run the tests (node can run the pure functions) and fix failures, (c) keep the prompt output compact and factual,
+    (d) add "/*==PART-n==*/" markers around new code, (e) update STATUS above + the CHANGELOG below, (f) give the user the full file.
+ 5. Never claim prediction accuracy of 100%. Calculations must be verifiable; interpretation is guidance only.
+ 6. If a value cannot be verified, say so in the output instead of guessing.
+
+STARTER PROMPT FOR A NEW CHAT (user pastes this with the file attached)
+ "Is HTML file ke upar VK BUILD MANIFEST comment hai. Use poora padho aur jo NEXT PART likha hai wahi banao.
+  Purana kuch mat todna, pehle ke parts ka code aur self-tests rakhna. Part banne ke baad manifest ka status
+  aur changelog update karke poori HTML file download ke liye do. Mujhe batao kya bana aur agla part kaun sa hai."
+
+THE 9 PARTS
+ 1 FOUNDATION (DONE)   Accuracy base: self-test panel (Meeus reference values + Ashtakavarga/Navamsa/dasha checks), True/Mean Rahu option, fuller mean-node formula.
+ 2 PLANET STATUS (DONE)  Exaltation/debilitation/own/friend/enemy sign, combustion (astangata), retrograde status, karakas, natural+functional benefic/malefic, Neecha Bhanga, aspects (drishti) table; add to prompt.
+ 3 HOUSES (DONE)       True Bhava Chalit (Sripati cusps), house lords chain, conjunctions, aspects on houses, per-house summary; fix "equal house" labelling.
+ 4 DASHA (DONE)        Mahadasha > Antardasha > Pratyantar > Sookshma with exact dates, next 3 periods, dasha-lord analysis (placement, dignity, houses ruled); optional Yogini dasha.
+ 5 YOGA AND DOSHA (DONE) Strict-rule detection: Gajakesari, Panch Mahapurusha, Raja/Dhana, Viparita Raja, Budhaditya, Chandra-Mangal, Kemadruma; Manglik, Kaal Sarp, Sade Sati/Dhaiya. Output "found / not found + rule used".
+ 6 STRENGTH (DONE, simplified)  Simplified Shadbala, Prastarashtakavarga, kakshya, Vimshopaka; strongest/weakest houses and planets.
+ 7 TRANSIT TIMING (DONE)  Jupiter/Saturn/Rahu ingress dates, retro stations, double-transit check, Sade Sati timeline, topic-wise (love, career, wealth...) timing windows for the next 24 months.
+ 8 PROMPT ENGINE V2 (DONE)  Topic-wise pre-computed facts block, anti-hallucination rules, token-compact format, Kundli matching (Ashtakoota, two profiles), answer modes.
+ 9 OUTPUT AND POLISH (DONE)  Result dashboard, printable/PDF-style report, copy/share, accessibility, speed, final QA of all self-tests, remove manifest if user wants.
+
+CHANGELOG
+ Part 1: added selfTest() + status line under the chart, Rahu/Ketu type selector (Mean/True), mean node now uses full Meeus polynomial,
+         prompt now states which node type was used. Verified in node: Moon (Meeus 47.a) matches to 0.00001 deg, Sun within 0.007 deg, Venus within 0.002 deg.
+ Part 2: planet status engine stat(L,asc,rt) = dignity (exalted/debilitated/moolatrikona/own/5-fold friendship), combustion, retrograde,
+         natural + functional nature (simplified lordship rule, Yogakaraka), basic Neecha Bhanga, graha drishti; new "Planet status" table on page,
+         "== PLANET STATUS ==" block in prompt (with the rules used), 7 more self-tests. Code markers: /*==PART-2==*/.
+ Part 3: mcL() Midheaven, cusps() Sripati bhava madhya, bh() bhava of a planet, true Chalit chart/tab (replaces equal-house), prompt blocks
+         "== HOUSES ==" (sign, lord, lord placement + dignity, occupants, aspects received, conjunctions) and "== CHALIT ==" (rashi house vs chalit house, SHIFTED flags),
+         new "Houses" table on page, 4 more self-tests (sidereal time vs Meeus 12.b, cusp invariants). Code markers: /*==PART-3==*/.
+ Part 4: dasInfo() pure Vimshottari engine (MD>AD>PD>SD, upcoming 3 antardashas, next MD), dashaPlus() prompt block ("Sookshma", "== DASHA LORDS ==":
+         placement, dignity, houses ruled, conjunctions, aspects, MD-AD relation, birth-time sensitivity in days per minute, nakshatra-boundary warning),
+         "Vimshottari dasha" table on page, 1 more self-test (nesting, 120-year span, balance at birth). Yogini dasha NOT built (optional, skipped). Markers: /*==PART-4==*/.
+ Part 5: yogas(L,asc,rt,saturnTransit) strict-rule engine, each item = {n,f,t,c}: Gajakesari, Pancha Mahapurusha (5), Budhaditya, Chandra-Mangal,
+         Sunapha/Anapha/Duradhara, Kemadruma (+cancellation), Raja (kendra lord + trikona lord), Yogakaraka, Dhana (simplified), Viparita Raja (3), Neecha Bhanga Raja,
+         Parivartana, Manglik (Lagna/Moon/Venus), Kaal Sarp (+partial), Sade Sati and Dhaiya (Saturn today), Guru Chandala, Grahan, Shrapit.
+         yText() prompt block ("FOUND" list + "Checked and NOT found"), yTable() card on page, 6 more self-tests. Markers: /*==PART-5==*/.
+ Part 6: sbal() simplified planet strength = Uchcha + Dig (from bhava madhya) + Naisargika + Kendra bala (max 240); FULL Shadbala NOT built (no Kala/Cheshta/Drik bala);
+         vimsh() Vimshopaka Shadvarga (D1 6, D2 2, D3 4, D9 5, D12 2, D30 1; own/exalted 20, great friend 18, friend 15, neutral 10, enemy 7, great enemy/debilitated 5);
+         bnd(p,q,sign,src) single-bindu function (= Prastarashtakavarga cell) and kak() kakshya lord (Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon, Lagna, 3 deg 45 min each);
+         sText() prompt block (planet ranks, Vimshopaka, own-sign BAV, strongest/weakest houses by SAV, TRANSIT KAKSHYA today for Part 7 to reuse), "Strength" table on page,
+         6 more self-tests. Prastarashtakavarga grid itself is not displayed. Markers: /*==PART-6==*/.
+ Part 7: scan(p,t0,t1,step) finds sign ingresses (bisection to ~2 min) and retro/direct stations; tdata() builds 24-month Jupiter/Saturn/Rahu events and exact double-transit intervals
+         (Jupiter itself/5/7/9 and Saturn itself/3/7/10 from Lagna houses); Saturn ingresses from 3 years back to 30 years ahead give the Sade Sati / Dhaiya timeline from the natal Moon;
+         tText() prompt block "== TRANSIT TIMING ==" (events with house from Lagna and Moon, double-transit windows for the SELECTED topic's key houses, Saturn timeline), card "Transit timing" on page
+         (refreshes when topic changes), 3 more self-tests (published ingress dates, Saturn station, double-transit sets). Rahu/Ketu stations not reported. Markers: /*==PART-7==*/.
+ Part 8: fText() "== TOPIC FACTS ==" (key houses: lord, placement, dignity, occupants, aspects, SAV, double transit now; topic karakas; Mahadasha/Antardasha link to key houses), RULES block (anti-hallucination),
+         answer length select (Short drops Houses, Strength and varga blocks / Standard / Deep), ash() Ashtakoota from two Moon longitudes with mdata()/mText() (partner = a saved profile, boy/girl from gender fields),
+         card "Kundli matching" on page, Manglik of both charts, 4 more self-tests. Vashya scored only for the same group and Yoni only for same animal or sworn enemies (other cross-table values differ by source, so they are shown as "not scored"
+         and the total is out of the scored maximum). Gana uses 6/6/5/1/0 values, Tara 3/1.5/0, Maitri uses natural friendship. Markers: /*==PART-8==*/.
+ Part 9: dsum()/dash() result dashboard (birth, Lagna/Moon/Sun, current dasha, strongest/weakest planet and houses, yogas, doshas, double transit) replaces "Your key details";
+         buttons Print / save as PDF (print CSS hides the form, prompt, tabs, ads and adds a header), Copy summary, Share summary (only where the browser has navigator.share; sent only on tap);
+         accessibility: scope on th, aria-label on tables and chart, role=status on the self-test line, placeholder colour darkened to #7d7391 (about 4.6:1), reduced-motion rule;
+         speed: question/name typing is debounced 180 ms (vkFlush runs before copying), transit scan is cached per chart; 1 more self-test; final QA run in node on 5 charts x all topics x 3 lengths.
+         The manifest comment is still in the file: to remove it, delete the whole comment block at the very top of the file (from its opening to its closing comment mark, before the head tag). Markers: /*==PART-9==*/.
+KNOWN LIMITS (carry forward): strength scores are partial and only for ranking, never call them Shadbala rupas; Yoga rules differ between traditions (Manglik house 2, Kaal Sarp reverse side, Raja/Dhana are simplified pair rules); Sade Sati: today in Part 5, timeline in Part 7; double transit ignores kakshya/BAV and is counted from Lagna only; Dasha uses 365.25-day years (some software uses 360 or 365.2425, dates can differ by days); Dignity is sign-based (Moon in Taurus / Mercury in Virgo 15-20 are reported Exalted); Rahu/Ketu get no dignity or aspects;
+         functional nature and Neecha Bhanga use simplified rules (stated in the prompt); Mars..Saturn use Keplerian elements (few arcmin error, best 1800-2050); no nutation applied to Sun (<0.01 deg);
+         Lahiri ayanamsa only; Chalit uses Sripati (Porphyry-style madhya, sandhi = midpoints), unreliable above ~66 deg latitude.
+=====================================================================
+-->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#6a2c91">
+<meta name="description" content="Vedic birth chart tool: enter your date, time and place of birth to get your kundli and a ready-to-use AI prompt.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="Vedic Birth Chart Insights – Free Kundli Tool">
+<meta property="og:description" content="Vedic birth chart tool: enter your date, time and place of birth to get your kundli and a ready-to-use AI prompt.">
+<meta name="twitter:card" content="summary">
+<title>Vedic Birth Chart Insights – Free Kundli Tool for Love, Career &amp; Life Questions</title>
+<style>
+#vk{--bg:#fff;--fg:#221b33;--card:#f6f1fb;--ac:#6a2c91;--ln:#a8742c;--or:#c4560a;--bd:#d9cde8;box-sizing:border-box;max-width:680px;margin:20px auto;padding:16px;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:14px;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;text-align:left}
+#vk *,#vk *::before,#vk *::after{box-sizing:border-box}
+#vk [hidden]{display:none!important}
+#vk div,#vk p,#vk ol,#vk li,#vk summary,#vk label,#vk td,#vk th,#vk h3{color:var(--fg);font-family:inherit}
+#vk .vk-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#vk .vk-title{font-size:22px;font-weight:700;line-height:1.45;margin:0}
+#vk h3{font-size:17px;font-weight:700;line-height:1.45;margin:18px 0 8px;padding:0;border:0;text-transform:none;letter-spacing:normal}
+#vk .vk-card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin:14px 0}
+#vk summary{cursor:pointer;font-size:16px;margin:0;padding:0}
+#vk .vk-r{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#vk label{display:block;font-size:14px;font-weight:600;margin:12px 0 4px;padding:0}
+#vk input,#vk select,#vk textarea{display:block;width:100%;max-width:100%;height:auto;margin:0;padding:10px!important;font:inherit;line-height:1.4;color:var(--fg)!important;background:#fff!important;border:1px solid var(--bd)!important;border-radius:8px!important;box-shadow:none!important}
+#vk textarea{resize:vertical;min-height:90px}
+#vk #vk-out{font:12px/1.45 ui-monospace,Menlo,Consolas,monospace!important;min-height:300px;margin-top:10px}
+#vk button{display:block;width:100%;margin:12px 0 0;padding:10px 16px!important;font:inherit;font-weight:600;line-height:1.45;text-transform:none;letter-spacing:normal;cursor:pointer;color:#fff!important;background:var(--ac)!important;border:0!important;border-radius:8px!important;box-shadow:none!important}
+#vk button.vk-auto{display:inline-block;width:auto;margin:0}
+#vk button.vk-sec{color:var(--fg)!important;background:var(--card)!important;border:1px solid var(--bd)!important}
+#vk .vk-tabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+#vk .vk-tabs button{padding:7px 13px!important}
+#vk .vk-tabs button.vk-on{color:#fff!important;background:var(--ac)!important;border-color:var(--ac)!important}
+#vk .vk-tabs select{width:auto}
+#vk .vk-w{overflow-x:auto}
+#vk table{width:100%;margin:0;border-collapse:collapse;border:0;font-size:13px}
+#vk td,#vk th{padding:6px 8px!important;text-align:left;white-space:nowrap;background:transparent!important;border:0!important;border-bottom:1px solid var(--bd)!important}
+#vk th{font-weight:700;background:var(--card)!important}
+#vk svg{display:block;width:100%;max-width:440px;height:auto;margin:0 auto}
+#vk svg text{fill:var(--fg)}
+#vk .vk-sn{fill:var(--or)!important;font-weight:700}
+#vk ol{margin:10px 0 0;padding:0 0 0 22px;list-style:decimal}
+#vk li{margin:6px 0;padding:0;list-style:decimal}
+#vk a{color:var(--ac);text-decoration:underline}
+#vk .vk-n{font-size:13px;line-height:1.5;opacity:.85;margin:8px 0}
+@media(max-width:480px){#vk{margin:10px 0;padding:12px;border-radius:10px}#vk .vk-title{font-size:19px}#vk .vk-card{padding:12px}}
+
+/* ===== Responsive / cross-browser additions ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{margin:0;padding:0 12px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));padding-bottom:env(safe-area-inset-bottom);background:linear-gradient(180deg,#f5effb 0,#ece3f6 100%);background-attachment:fixed;min-height:100vh;-webkit-font-smoothing:antialiased}
+#vk{width:100%;max-width:760px;overflow-wrap:break-word;word-wrap:break-word;
+font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+#vk .vk-r>*{min-width:0}
+#vk .vk-top{flex-wrap:wrap}
+#vk input,#vk select,#vk textarea{min-height:44px;-webkit-appearance:none;appearance:none;-webkit-text-size-adjust:100%}
+#vk select{-webkit-appearance:menulist;appearance:auto;text-overflow:ellipsis}
+#vk input[type=date],#vk input[type=time]{-webkit-appearance:none;appearance:none;min-width:0}
+#vk input::-webkit-date-and-time-value{text-align:left;min-height:1.4em}
+#vk textarea{min-height:90px}
+#vk button{min-height:44px;touch-action:manipulation;-webkit-appearance:none;appearance:none}
+#vk .vk-tabs button{min-height:40px}
+#vk .vk-w{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+#vk svg{max-width:min(100%,480px)}
+#vk summary{-webkit-tap-highlight-color:transparent}
+#vk :focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+#vk .vk-n,#vk td,#vk th{-webkit-text-size-adjust:100%}
+@media(max-width:600px){#vk .vk-tabs select{flex:1 1 140px}}
+@media(max-width:480px){
+body{padding-left:max(6px,env(safe-area-inset-left));padding-right:max(6px,env(safe-area-inset-right))}
+#vk{margin:8px auto}
+#vk #vk-out{font-size:16px!important;min-height:240px}
+#vk .vk-tabs button{flex:1 1 auto}
+}
+@media(max-width:380px){
+#vk .vk-r:not([style]){grid-template-columns:1fr}
+#vk .vk-title{font-size:17px}
+#vk{padding:10px}
+}
+@media(min-width:900px){body{padding-top:12px;padding-bottom:12px}}
+@media print{body{background:#fff;padding:0}#vk{border:0;max-width:none;margin:0}#vk button{display:none!important}}
+
+/* ===== Light placeholder text ===== */
+#vk input::placeholder,#vk textarea::placeholder{color:#7d7391!important;opacity:1;font-weight:400}
+#vk input::-webkit-input-placeholder{color:#7d7391!important;opacity:1}
+#vk input::-moz-placeholder{color:#7d7391!important;opacity:1}
+
+
+/* ===== Ad slots (stay hidden until AdSense IDs are set) ===== */
+.vk-ad{box-sizing:border-box;width:100%;max-width:760px;margin:18px auto;text-align:center;overflow:hidden}
+.vk-ad[hidden]{display:none!important}
+.vk-ad .vk-adl{display:block;margin:0 0 4px;font:11px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:0;color:#7a6f8a}
+.vk-ad ins{display:block}
+</style>
+<style id="vk-ready-css">
+#vk .vk-ready{position:relative;margin:14px 0;padding:14px 44px 14px 14px;border-radius:12px;background:#e8f5ec;border:1px solid #9ccfae;color:#1d5a35}
+#vk .vk-ready[hidden]{display:none}
+#vk .vk-ready b{display:block;font-size:16px;margin-bottom:4px}
+#vk .vk-ready p{margin:0 0 4px;font-size:14px;line-height:1.5}
+#vk .vk-ready button.vk-x{position:absolute;top:6px;right:6px;display:grid;place-items:center;width:36px;min-height:36px;height:36px;margin:0;padding:0!important;background:transparent!important;color:#1d5a35!important;border-radius:50%!important;font-size:24px;line-height:1}
+#vk .vk-ready button.vk-x:hover{background:rgba(29,90,53,.12)!important}
+</style>
+<style>
+#vk .vk-r3{display:grid;grid-template-columns:1fr 1.3fr 1.2fr;gap:8px}
+#vk .vk-r3:has(#vk-th){grid-template-columns:1fr 1fr 1.3fr}
+#vk label.vk-chk{display:flex;align-items:center;gap:10px;font-weight:500;margin:14px 0 4px;padding:10px;background:#fff;border:1px dashed var(--bd);border-radius:8px;cursor:pointer}
+#vk label.vk-chk input{display:inline-block;width:20px;height:20px;flex:none;padding:0!important;margin:0}
+#vk #vk-tzw select,#vk #vk-tuw select,#vk #vk-city{margin-top:4px}
+#vk #vk-cityb{font-size:14px;padding:7px 12px!important}
+#vk select{min-height:44px}
+#vk input#vk-dy{min-height:44px}
+#vk a.vk-ai{display:inline-block;padding:8px 14px;min-height:40px;font-weight:600;color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:8px;text-decoration:none}#vk a.vk-ai:hover{border-color:var(--ac)}#vk #vk-kf{line-height:1.8}
+@media(max-width:380px){#vk .vk-r3{grid-template-columns:1fr 1fr}#vk .vk-r3 #vk-dy,#vk .vk-r3 #vk-tap{grid-column:1/-1}}
+</style>
+<style id="vk-p9">
+#vk #vk-ph{display:none}
+@media print{#vk .vk-np,#vk .vk-ad,.vk-ad,#vk .vk-tabs,#vk-ready,#vk #vk-act{display:none!important}#vk #vk-ph{display:block;font-weight:600;margin:0 0 8px}#vk{font-size:12px}#vk table{break-inside:avoid}#vk h3{break-after:avoid}#vk .vk-card{break-inside:avoid}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<noscript><p style="padding:16px;font-family:sans-serif">JavaScript must be enabled to use this tool.</p></noscript>
+<div class="vk-ad" data-slot="top" hidden></div>
+<div id="vk"><div class="vk-top vk-np"><div class="vk-title">Create your prompt</div></div>
+<p class="vk-n vk-np" style="margin:6px 0 0">Enter your birth details to get your birth chart (kundli) and a ready-to-paste AI prompt. It takes about a minute. Your date and time of birth are processed in your browser and are not sent anywhere; only the place name is sent to OpenStreetMap to find its coordinates.</p>
+<div class="vk-card vk-np">
+<div id="vk-pfw" hidden><label>Saved profiles</label><div class="vk-r" style="grid-template-columns:1fr auto"><select id="vk-pf"></select><button id="vk-pd" class="vk-sec vk-auto">Delete profile</button></div><div class="vk-n">Profiles are saved only on this device.</div></div>
+<h3 style="margin-top:0">Step 1 &#183; Birth details <span style="font-weight:400;font-size:13px">(* required)</span></h3>
+<label>Name (optional)</label><input id="vk-nm" placeholder="e.g. Pawan" autocomplete="off">
+<label>Gender (optional)</label><select id="vk-gn"><option value="">Prefer not to say</option><option value="Female">Female</option><option value="Male">Male</option><option value="Other">Other</option></select>
+<label>Date of birth<span style="color:#c4560a" aria-hidden="true"> *</span></label>
+<div class="vk-r3"><select id="vk-dd" aria-label="Birth day"></select><select id="vk-dm" aria-label="Birth month"></select><input id="vk-dy" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="Year, e.g. 1995" autocomplete="off" aria-label="Birth year (4 digits)"></div>
+<input id="vk-dt" type="hidden">
+<div id="vk-tbox">
+<label>Time of birth<span style="color:#c4560a" aria-hidden="true"> *</span></label>
+<div class="vk-r3"><select id="vk-th" aria-label="Hour"></select><select id="vk-tmn" aria-label="Minute"></select><select id="vk-tap" aria-label="AM or PM"><option value="">AM / PM</option><option value="AM">AM (morning)</option><option value="PM">PM (afternoon/night)</option></select></div>
+</div>
+<input id="vk-tm" type="hidden">
+<label class="vk-chk"><input type="checkbox" id="vk-tkn"><span>I do not know my exact birth time</span></label>
+<div id="vk-tuw" hidden><label for="vk-tup">Estimate: around what time of day were you born?</label><select id="vk-tup"><option value="m">Morning (6 AM to 12 PM)</option><option value="a">Afternoon (12 PM to 4 PM)</option><option value="e">Evening (4 PM to 8 PM)</option><option value="n">Night (8 PM to 12 AM)</option><option value="l">Late night / pre-dawn (12 AM to 6 AM)</option><option value="x" selected>No idea at all</option></select><div class="vk-n" style="color:#b3261e">&#9888; Without the exact time, the ascendant (Lagna) and houses are not reliable. A reading will still be created, but it will rely more on the Moon sign and dasha.</div></div>
+<input id="vk-tu" type="hidden">
+<label>Place of birth<span style="color:#c4560a" aria-hidden="true"> *</span></label><div class="vk-r" style="grid-template-columns:1fr auto"><input id="vk-pq" placeholder="City, state, country, e.g. Jaipur, Rajasthan, India"><button id="vk-ps" class="vk-auto">Search</button></div>
+<div class="vk-n" id="vk-pm"></div>
+<div class="vk-n"><button type="button" id="vk-cityb" class="vk-auto vk-sec">Having trouble searching? Pick from the list of major cities</button></div>
+<select id="vk-city" hidden aria-label="Major cities"></select>
+<div id="vk-tzw" hidden><label for="vk-tzs">Time zone of birth place<span style="color:#c4560a" aria-hidden="true"> *</span></label><select id="vk-tzs"><option value="">— Select —</option><option value="America/New_York">USA: Eastern (New York, Washington)</option><option value="America/Chicago">USA: Central (Chicago, Texas)</option><option value="America/Denver">USA: Mountain (Denver)</option><option value="America/Phoenix">USA: Arizona</option><option value="America/Los_Angeles">USA: Pacific (Los Angeles, California)</option><option value="America/Anchorage">USA: Alaska</option><option value="Pacific/Honolulu">USA: Hawaii</option><option value="America/Toronto">Canada: Eastern (Toronto)</option><option value="America/Winnipeg">Canada: Central (Winnipeg)</option><option value="America/Edmonton">Canada: Mountain (Edmonton)</option><option value="America/Vancouver">Canada: Pacific (Vancouver)</option><option value="America/Halifax">Canada: Atlantic (Halifax)</option><option value="Australia/Sydney">Australia: Sydney, Melbourne</option><option value="Australia/Brisbane">Australia: Brisbane</option><option value="Australia/Adelaide">Australia: Adelaide</option><option value="Australia/Darwin">Australia: Darwin</option><option value="Australia/Perth">Australia: Perth</option><option value="Europe/Moscow">Russia: Moscow</option><option value="Asia/Yekaterinburg">Russia: Yekaterinburg</option><option value="Asia/Novosibirsk">Russia: Novosibirsk</option><option value="Asia/Vladivostok">Russia: Vladivostok</option><option value="America/Sao_Paulo">Brazil: São Paulo</option><option value="America/Mexico_City">Mexico: Mexico City</option><option value="Asia/Jakarta">Indonesia: Jakarta</option><option value="Europe/Lisbon">Portugal / similar to UK time</option><option value="Africa/Johannesburg">South Africa</option><option value="Asia/Dubai">Gulf: Dubai, Oman</option><option value="Asia/Kolkata">India</option></select><div class="vk-n">This country has more than one time zone. Choose the one that matches your birth place.</div></div>
+<input id="vk-lat" type="hidden"><input id="vk-lon" type="hidden"><input id="vk-tz" type="hidden">
+<h3>Step 2 &#183; What would you like to know?</h3><label>Topic</label><select id="vk-cat"></select>
+<label>Answer style</label><select id="vk-ans"><option value="simple">Simple and clear (easy language, no astrology jargon)</option><option value="tech">Detailed (with astrological terms)</option></select>
+<label>Rahu / Ketu type</label><select id="vk-nd"><option value="m">Mean node (traditional default)</option><option value="t">True node (actual position)</option></select>
+<label>Answer length</label><select id="vk-ml"><option value="m">Standard</option><option value="s">Short (about 150 words, smaller prompt)</option><option value="d">Deep (long, detailed)</option></select>
+<label>Your question or situation</label><textarea id="vk-q" style="min-height:80px;font:inherit" placeholder="e.g. Why do my relationships keep following the same pattern? What should I focus on in my love life this year?"></textarea>
+<div class="vk-n" id="vk-err" role="alert" style="color:#b3261e;font-weight:600" hidden></div>
+<button id="vk-go">Create my prompt</button>
+</div>
+<div id="vk-res" hidden><div id="vk-ph"></div><div class="vk-ready" id="vk-ready" role="status" hidden><button type="button" class="vk-x" id="vk-rx" aria-label="Close this message">&times;</button><b id="vk-rt"></b><p id="vk-rp"></p><button type="button" class="vk-sec vk-auto" id="vk-ca" hidden style="margin-top:10px">Copy again</button></div>
+<div class="vk-card vk-np"><h3 style="margin-top:0">Step 3 &#183; Copy your prompt</h3><div class="vk-n">Paste it into ChatGPT, Claude or Gemini. The prompt tells the AI to reply in simple Hindi.</div><button id="vk-cp">Copy prompt</button><div class="vk-tabs"><span class="vk-n" style="margin:0">Copy and open:</span><a class="vk-ai" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a><a class="vk-ai" href="https://claude.ai/new" target="_blank" rel="noopener">Claude</a><a class="vk-ai" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a></div><textarea id="vk-out" style="margin-top:8px"></textarea></div>
+<div class="vk-ad" data-slot="mid" hidden></div>
+<div class="vk-card" id="vk-kf"></div>
+<div class="vk-tabs" id="vk-act"><button id="vk-pp" class="vk-sec vk-auto">Print / save as PDF</button><button id="vk-cs" class="vk-sec vk-auto">Copy summary</button><button id="vk-sh" class="vk-sec vk-auto" hidden>Share summary</button></div><div class="vk-n">The summary includes your birth date and place. It is copied or shared only when you tap a button.</div>
+<div class="vk-card"><label for="vk-mt" style="margin-top:0">Kundli matching (optional): compare with a saved profile</label><select id="vk-mt"></select><div class="vk-n">Create the other person's chart once so it is saved, then choose it here. Only the Moon-based Ashtakoota is used.</div><div id="vk-mr"></div></div>
+<h3>Birth chart</h3>
+<div class="vk-n" id="vk-tuw2" hidden style="color:#b3261e;font-weight:600">&#9888; You gave an approximate birth time, so the ascendant, houses and divisional charts are not reliable. Insights based on the Moon sign are more dependable.</div>
+<div class="vk-tabs" id="vk-tabs"></div>
+<div class="vk-tabs"><select id="vk-vsel"></select><button id="vk-sty" class="vk-sec vk-auto">Style: North Indian</button></div>
+<h3 id="vk-ct"></h3><div id="vk-chart"></div>
+<div class="vk-w"><table id="vk-tb"></table></div>
+<div class="vk-n" id="vk-sr"></div><div class="vk-n" id="vk-st"></div>
+<h3>Houses</h3><div class="vk-w"><table id="vk-hs"></table></div>
+<h3>Planet status</h3><div class="vk-w"><table id="vk-pst"></table></div>
+<h3>Strength</h3><div class="vk-w"><table id="vk-sb"></table></div><div class="vk-n" id="vk-sn"></div>
+<h3>Yogas and doshas</h3><div class="vk-card" id="vk-yg"></div>
+<h3>Vimshottari dasha</h3><div class="vk-w"><table id="vk-ds"></table></div>
+<h3>Transit timing (next 24 months)</h3><div class="vk-card" id="vk-tt"></div>
+<h3>Ashtakavarga (houses 1&#8211;12 from the ascendant)</h3><div class="vk-w"><table id="vk-av"></table></div>
+<div class="vk-ad" data-slot="bottom" hidden></div>
+</div>
+<script src="tz.js" defer></script>
+<script>
+(function(){
+const $=i=>document.getElementById('vk-'+i),R=Math.PI/180,N=a=>(a%360+360)%360;
+const SG=['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+const GN={Female:'Female',Male:'Male',Other:'Other'};
+const PN=['Su','Mo','Ma','Me','Ju','Ve','Sa','Ra','Ke'],PF=['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu'];
+const LORD=[2,5,3,1,0,3,5,2,4,6,6,4].map(i=>PF[i]);
+const NK='Ashwini,Bharani,Krittika,Rohini,Mrigashira,Ardra,Punarvasu,Pushya,Ashlesha,Magha,Purva Phalguni,Uttara Phalguni,Hasta,Chitra,Swati,Vishakha,Anuradha,Jyeshtha,Mula,Purva Ashadha,Uttara Ashadha,Shravana,Dhanishta,Shatabhisha,Purva Bhadrapada,Uttara Bhadrapada,Revati'.split(',');
+const YG='Vishkambha,Priti,Ayushman,Saubhagya,Shobhana,Atiganda,Sukarma,Dhriti,Shula,Ganda,Vriddhi,Dhruva,Vyaghata,Harshana,Vajra,Siddhi,Vyatipata,Variyana,Parigha,Shiva,Siddha,Sadhya,Shubha,Shukla,Brahma,Indra,Vaidhriti'.split(',');
+const TT='Pratipada,Dwitiya,Tritiya,Chaturthi,Panchami,Shashthi,Saptami,Ashtami,Navami,Dashami,Ekadashi,Dwadashi,Trayodashi,Chaturdashi'.split(',');
+const KM=['Bava','Balava','Kaulava','Taitila','Gara','Vanija','Vishti (Bhadra)'];
+const DL=['Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury'],DY=[7,20,6,10,7,18,16,19,17];
+const CITY=[['Delhi',28.61,77.21,'Asia/Kolkata'],['Gurugram',28.46,77.03,'Asia/Kolkata'],['Noida',28.54,77.39,'Asia/Kolkata'],['Rohtak',28.89,76.61,'Asia/Kolkata'],['Hisar',29.15,75.72,'Asia/Kolkata'],['Karnal',29.69,76.99,'Asia/Kolkata'],['Panipat',29.39,76.97,'Asia/Kolkata'],['Chandigarh',30.73,76.78,'Asia/Kolkata'],['Ludhiana',30.9,75.86,'Asia/Kolkata'],['Amritsar',31.63,74.87,'Asia/Kolkata'],['Jaipur',26.91,75.79,'Asia/Kolkata'],['Agra',27.18,78.02,'Asia/Kolkata'],['Meerut',28.98,77.71,'Asia/Kolkata'],['Lucknow',26.85,80.95,'Asia/Kolkata'],['Kanpur',26.45,80.35,'Asia/Kolkata'],['Varanasi',25.32,83.01,'Asia/Kolkata'],['Patna',25.59,85.14,'Asia/Kolkata'],['Kolkata',22.57,88.36,'Asia/Kolkata'],['Mumbai',19.08,72.88,'Asia/Kolkata'],['Pune',18.52,73.86,'Asia/Kolkata'],['Ahmedabad',23.02,72.57,'Asia/Kolkata'],['Bhopal',23.26,77.41,'Asia/Kolkata'],['Indore',22.72,75.86,'Asia/Kolkata'],['Nagpur',21.15,79.09,'Asia/Kolkata'],['Hyderabad',17.39,78.49,'Asia/Kolkata'],['Bengaluru',12.97,77.59,'Asia/Kolkata'],['Chennai',13.08,80.27,'Asia/Kolkata'],['Dehradun',30.32,78.03,'Asia/Kolkata'],['Kathmandu',27.72,85.32,'Asia/Kathmandu'],['Dubai',25.2,55.27,'Asia/Dubai'],['London',51.51,-0.13,'Europe/London'],['New York',40.71,-74.01,'America/New_York']];
+const EL={Me:[.38709927,.20563593,7.00497902,252.2503235,77.45779628,48.33076593,.00000037,.00001906,-.00594749,149472.67411175,.16047689,-.12534081],
+Ve:[.72333566,.00677672,3.39467605,181.9790995,131.60246718,76.67984255,.0000039,-.00004107,-.0007889,58517.81538729,.00268329,-.27769418],
+Ea:[1.00000261,.01671123,-.00001531,100.46457166,102.93768193,0,.00000562,-.00004392,-.01294668,35999.37244981,.32327364,0],
+Ma:[1.52371034,.0933941,1.84969142,-4.55343205,-23.94362959,49.55953891,.00001847,.00007882,-.00813131,19140.30268499,.44441088,-.29257343],
+Ju:[5.202887,.04838624,1.30439695,34.39644051,14.72847983,100.47390909,-.00011607,-.00013253,-.00183714,3034.74612775,.21252668,.20469106],
+Sa:[9.53667594,.05386179,2.48599187,49.95424423,92.59887831,113.66242448,-.0012506,-.00050991,.00193609,1222.49362201,-.41897216,-.28867794]};
+function hel(k,T){const e=EL[k],f=i=>e[i]+e[i+6]*T,a=f(0),ec=f(1),I=f(2)*R,w=f(4),O=f(5)*R;let M=N(f(3)-w);if(M>180)M-=360;M*=R;let E=M+ec*Math.sin(M);for(let i=0;i<9;i++)E-=(E-ec*Math.sin(E)-M)/(1-ec*Math.cos(E));
+const xp=a*(Math.cos(E)-ec),yp=a*Math.sqrt(1-ec*ec)*Math.sin(E),om=(w-f(5))*R,c=Math.cos,s=Math.sin;
+return[(c(om)*c(O)-s(om)*s(O)*c(I))*xp+(-s(om)*c(O)-c(om)*s(O)*c(I))*yp,(c(om)*s(O)+s(om)*c(O)*c(I))*xp+(-s(om)*s(O)+c(om)*c(O)*c(I))*yp]}
+const ay=T=>23.8571+1.396971*T+.0003086*T*T;
+/*==PART-1==*/
+let NODE='m';
+function nodeL(T){const t2=T*T;let o=125.0445479-1934.1362891*T+.0020754*t2+t2*T/467441-t2*t2/60616000;
+if(NODE=='t'){const D=(297.8501921+445267.1114034*T-.0018819*t2)*R,M=(357.5291092+35999.0502909*T-.0001536*t2)*R,P=(134.9633964+477198.8675055*T+.0087414*t2)*R,F=(93.272095+483202.0175233*T-.0036539*t2)*R,s=Math.sin;
+o+=-1.4979*s(2*(D-F))-.15*s(M)-.1226*s(2*D)+.1176*s(2*F)-.0801*s(2*(P-F))}return o}
+/*==END PART-1==*/
+/*==PART-2==*/
+const LI=LORD.map(n=>PF.indexOf(n)),DEX=[0,1,9,5,3,11,6],DOWN=[[4],[3],[0,7],[2,5],[8,11],[1,6],[9,10]],DMT=[[4,0,20],[1,3,30],[0,0,12],[5,15,20],[8,0,10],[6,0,15],[10,0,20]],
+FRI=[[1,2,4],[0,3],[0,1,4],[0,5],[0,1,2],[3,6],[3,5]],ENE=[[5,6],[],[3],[1],[3,5],[0,1],[0,1,2]],ASP=[[7],[7],[4,7,8],[7],[5,7,9],[7],[3,7,10]],sg30=l=>Math.floor(l/30),sep=(a,b)=>Math.abs(((a-b+540)%360)-180);
+function dig(i,L){const l=L[i],s=sg30(l),d=l%30,x=DEX[i];if(s==x)return'Exalted';if(s==(x+6)%12)return'Debilitated';
+if(DOWN[i].includes(s))return s==DMT[i][0]&&d>=DMT[i][1]&&d<DMT[i][2]?'Moolatrikona':'Own sign';
+const k=LI[s],v=(FRI[i].includes(k)?1:ENE[i].includes(k)?-1:0)+([2,3,4,10,11,12].includes((sg30(L[k])-s+12)%12+1)?1:-1);
+return v==2?'Great friend sign':v==1?'Friend sign':v==-1?'Enemy sign':v==-2?'Great enemy sign':'Neutral sign'}
+function cmb(i,L,rt){return i>=1&&i<=6&&sep(L[i],L[0])<[0,12,17,rt[3]?12:14,11,rt[5]?8:10,15][i]}
+const rl=(i,as)=>[...Array(12).keys()].filter(k=>LI[(as+k)%12]==i).map(k=>k+1);
+function func(ru){const has=a=>ru.some(h=>a.includes(h));return has([4,7,10])&&has([5,9])?'Yogakaraka':has([1,5,9])?'Functional benefic':has([6,8,12])?'Functional malefic':has([3,11])?'Mild functional malefic':'Neutral'}
+function nb(i,L,as){if(dig(i,L)!='Debilitated')return'';const mo=sg30(L[1]),kd=l=>[as,mo].some(f=>[1,4,7,10].includes((sg30(l)-f+12)%12+1));
+return[LI[(DEX[i]+6)%12],LI[DEX[i]]].some(k=>kd(L[k]))?'Neecha Bhanga present':'No Neecha Bhanga by the basic rule'}
+function asp(i,L,as){const t=ASP[i].map(n=>(sg30(L[i])+n-1)%12);return{hs:t.map(x=>(x-as+12)%12+1),pl:L.map((l,j)=>j!=i&&t.includes(sg30(l))?PF[j]:'').filter(Boolean)}}
+function stat(L,asc,rt){const as=sg30(asc);return L.map((l,i)=>{const o={n:i,h:(sg30(l)-as+12)%12+1,r:!!rt[i]};
+if(i>6)return Object.assign(o,{d:'Not rated',nat:'Malefic',f:'',ru:[],cb:false,nb:'',a:null});
+const ru=rl(i,as);return Object.assign(o,{d:dig(i,L),nat:i==1?(N(L[1]-L[0])<180?'Benefic (waxing Moon)':'Malefic (waning Moon)'):[3,4,5].includes(i)?'Benefic':'Malefic',f:func(ru),ru,cb:cmb(i,L,rt),nb:nb(i,L,as),a:asp(i,L,as)})})}
+function pstText(){return'== PLANET STATUS (rule-based; whole-sign houses; dignity by sign) ==\n'+stat(S.lon,S.asc,S.rt).map(o=>o.a?`- ${PF[o.n]}: ${o.d}; natural ${o.nat}; for this ascendant ${o.f} (rules houses ${o.ru.join(',')})${o.cb?'; COMBUST':''}${o.r?'; retrograde':''}${o.nb?'; '+o.nb:''}; aspects houses ${o.a.hs.join(',')}${o.a.pl.length?' (planets there: '+o.a.pl.join(', ')+')':''}`:`- ${PF[o.n]}: house ${o.h}; no dignity or aspects assigned (traditions differ); natural malefic`).join('\n')+'\nRules: 5-fold friendship (natural + temporary); combustion orbs Moon 12, Mars 17, Mercury 14 (12 if retrograde), Jupiter 11, Venus 10 (8 if retrograde), Saturn 15; aspects Mars 4/7/8, Jupiter 5/7/9, Saturn 3/7/10, others 7th; functional nature is a simplified lordship rule (Yogakaraka = rules a kendra and a trikona).\n\n'}
+function pstTable(){$('pst').innerHTML='<tr><th>Planet<th>Dignity<th>Nature<th>For this ascendant<th>Status<th>Aspects (houses)</tr>'+stat(S.lon,S.asc,S.rt).map(o=>`<tr><td>${PF[o.n]}<td>${o.d}<td>${o.nat}<td>${o.f||'-'}<td>${[o.cb?'Combust':'',o.r?'Retrograde':'',o.nb].filter(Boolean).join(', ')||'-'}<td>${o.a?o.a.hs.join(', '):'-'}</tr>`).join('')}
+/*==END PART-2==*/
+/*==PART-3==*/
+const gst=jd=>N(280.46061837+360.98564736629*(jd-2451545));
+function mcL(jd,lon){const T=(jd-2451545)/36525,th=N(gst(jd)+lon)*R,ep=(23.4392911-.0130042*T)*R;return N(Math.atan2(Math.sin(th),Math.cos(th)*Math.cos(ep))/R-ay(T))}
+function cusps(A,M){const w=N(A-M)/3,v=N(M+180-A)/3;return[A,A+v,A+2*v,M+180,M+180+w,M+180+2*w,A+180,A+180+v,A+180+2*v,M,M+w,M+2*w].map(N)}
+const stt=c=>c.map((x,h)=>{const p=c[(h+11)%12];return N(p+N(x-p)/2)});
+function bh(l,c){const st=stt(c);for(let h=0;h<12;h++)if(N(l-st[h])<N(st[(h+1)%12]-st[h]))return h+1;return 1}
+function hrows(){const R2=stat(S.lon,S.asc,S.rt),as=sg30(S.asc),pl=[...Array(12)].map(()=>[]);S.lon.forEach((l,i)=>pl[sg30(l)].push(PF[i]));
+return{pl,rows:[...Array(12).keys()].map(i=>{const h=i+1,s=(as+i)%12,k=LI[s],ls=sg30(S.lon[k]);return{h,s,k,lh:(ls-as+12)%12+1,ls,d:R2[k].d,pl:pl[s],ah:R2.filter(r=>r.a&&r.a.hs.includes(h)).map(r=>PF[r.n]),c:S.cu[i]}})}}
+const cjs=(pl,as)=>pl.map((a,s)=>a.length>1?a.join('+')+' in '+SG[s]+' (house '+((s-as+12)%12+1)+')':'').filter(Boolean).join('; ')||'none';
+function hText(){const H=hrows();return'== HOUSES (D1, whole-sign) ==\n'+H.rows.map(r=>`- House ${r.h} ${SG[r.s]}: lord ${PF[r.k]} in house ${r.lh} ${SG[r.ls]} (${r.d}); planets: ${r.pl.join(', ')||'none'}; aspected by: ${r.ah.join(', ')||'none'}`).join('\n')+'\nConjunctions (same sign): '+cjs(H.pl,sg30(S.asc))+'\n\n'}
+function chText(){const c=S.cu;return'== CHALIT (Sripati Bhava Chalit; a planet belongs to the bhava whose span contains it) ==\nBhava madhya (house centers): '+c.map((x,i)=>(i+1)+': '+SG[sg30(x)]+' '+dm(x%30)).join(', ')+'\n'+S.lon.map((l,i)=>{const a=(sg30(l)-sg30(S.asc)+12)%12+1,b=bh(l,c);return`- ${PF[i]}: rashi house ${a}, chalit house ${b}${a!=b?' (SHIFTED)':''}`}).join('\n')}
+function hTable(){$('hs').innerHTML='<tr><th>House<th>Sign<th>Lord (in house)<th>Planets<th>Aspected by<th>Chalit centre</tr>'+hrows().rows.map(r=>`<tr><td>${r.h}<td>${SG[r.s]}<td>${PF[r.k]} (${r.lh})<td>${r.pl.join(', ')||'-'}<td>${r.ah.join(', ')||'-'}<td>${SG[sg30(r.c)]} ${dm(r.c%30)}</tr>`).join('')+(Math.abs(S.lat)>66?'<tr><td colspan="6">Polar latitude: Chalit centres are not reliable.</tr>':'')}
+/*==END PART-3==*/
+/*==PART-4==*/
+const YD=365.25*864e5,iso=t=>new Date(t).toISOString().slice(0,10),pfi=k=>PF.indexOf(DL[k]);
+function dlev(l,s,len){const o=[];let t=s;for(let j=0;j<9;j++){const k=(l+j)%9,e=t+len*DY[k]/120;o.push({l:k,s:t,e});t=e}return o}
+function dasInfo(birth,m,now){const u=360/27,k=Math.floor(m/u),fr=m%u/u,l0=k%9;let t=birth-fr*DY[l0]*YD;const mds=[];
+for(let i=0;i<9;i++){const l=(l0+i)%9,e=t+DY[l]*YD;mds.push({l,s:t,e});t=e}
+const at=(a,x)=>a.findIndex(p=>x>=p.s&&x<p.e),i=at(mds,now);if(i<0)return{mds};
+const md=mds[i],ads=dlev(md.l,md.s,md.e-md.s),j=at(ads,now),ad=ads[j],pds=dlev(ad.l,ad.s,ad.e-ad.s),pd=pds[at(pds,now)],sds=dlev(pd.l,pd.s,pd.e-pd.s),sd=sds[at(sds,now)];
+let up=ads.slice(j+1,j+4).map(x=>Object.assign({md:md.l},x));if(up.length<3){const nl=(md.l+1)%9;up=up.concat(dlev(nl,md.e,DY[nl]*YD).slice(0,3-up.length).map(x=>Object.assign({md:nl},x)))}
+return{mds,md,ad,pd,sd,up,nm:mds[i+1]||null,fr,l0}}
+function lordText(k,lab,R2){const i=pfi(k),l=S.lon[i],a=(sg30(l)-sg30(S.asc)+12)%12+1,b=bh(l,S.cu),r=R2[i],dl=LI[sg30(l)],cj=S.lon.map((x,j)=>j!=i&&sg30(x)==sg30(l)?PF[j]:'').filter(Boolean);
+return`- ${lab} ${PF[i]}: ${SG[sg30(l)]} ${dm(l%30)}, house ${a}${a!=b?' (chalit '+b+')':''}${i<7?', '+r.d+'; rules houses '+r.ru.join(',')+' ('+r.f+')':'; acts through its sign lord '+PF[dl]+' (in house '+((sg30(S.lon[dl])-sg30(S.asc)+12)%12+1)+')'}${r.cb?'; combust':''}${r.r?'; retrograde':''}${cj.length?'; conjunct '+cj.join(', '):''}${r.a?'; aspects houses '+r.a.hs.join(','):''}`}
+function dashaPlus(){const D=dasInfo(S.birth,S.lon[1],S.now);if(!D.sd)return'';const R2=stat(S.lon,S.asc,S.rt),u=360/27,m=S.lon[1]%u,L=x=>iso(x.s)+' to '+iso(x.e),
+h=(S.lon[pfi(D.ad.l)]<0?0:(sg30(S.lon[pfi(D.ad.l)])-sg30(S.lon[pfi(D.md.l)])+12)%12+1),sp=N(pos(S.jd+.5)[1]-pos(S.jd-.5)[1])/1440,sens=(sp*DY[D.l0]/u*365.25).toFixed(1);
+return`\nCurrent Sookshma dasha: ${DL[D.sd.l]} (${L(D.sd)})\nUpcoming antardashas: `+D.up.map(x=>`${DL[x.md]}-${DL[x.l]} (${L(x)})`).join('; ')+(D.nm?`\nNext Mahadasha: ${DL[D.nm.l]} (${L(D.nm)})`:'')+`\n\n== DASHA LORDS (current) ==\n`+[[D.md.l,'Mahadasha'],[D.ad.l,'Antardasha'],[D.pd.l,'Pratyantar']].map(x=>lordText(x[0],x[1],R2)).join('\n')+`\nMahadasha-Antardasha relation: ${DL[D.ad.l]} is in house ${h} from ${DL[D.md.l]}`+([6,8,12].includes(h)?' (6/8/12: strained relation)':[1,4,5,7,9,10].includes(h)?' (supportive relation)':' (mixed relation)')+`\nDasha dates use 365.25-day years from the Moon's nakshatra balance. Timing sensitivity: a 1-minute error in birth time shifts all dasha dates by about ${sens} days.`+(Math.min(m,u-m)<.25?'\nWARNING: the Moon is very close to a nakshatra boundary, so the whole dasha sequence is sensitive to the exact birth time.':'')}
+function dsTable(){const D=dasInfo(S.birth,S.lon[1],S.now);$('ds').innerHTML='<tr><th>Mahadasha<th>From<th>To</tr>'+D.mds.map(p=>`<tr${D.md&&p.l==D.md.l?' style="font-weight:700"':''}><td>${DL[p.l]}<td>${p.s<S.birth?'Birth (balance)':iso(p.s)}<td>${iso(p.e)}</tr>`).join('')+(D.sd?`<tr><td colspan="3">Now: ${DL[D.md.l]} &gt; ${DL[D.ad.l]} &gt; ${DL[D.pd.l]} &gt; ${DL[D.sd.l]} (Sookshma until ${iso(D.sd.e)})</tr>`:'')}
+/*==END PART-4==*/
+/*==PART-5==*/
+function yogas(L,asc,rt,ts){const as=sg30(asc),R2=stat(L,asc,rt),sg=i=>sg30(L[i]),hf=i=>(sg(i)-as+12)%12+1,hm=i=>(sg(i)-sg(1)+12)%12+1,K=[1,4,7,10],Y=[],P=i=>PF[i],
+add=(n,f,t,c)=>Y.push({n,f:!!f,t:t||'',c:c||''}),lord=h=>LI[(as+h-1)%12],same=(a,b)=>sg(a)==sg(b),exch=(a,b)=>a!=b&&LI[sg(a)]==b&&LI[sg(b)]==a,
+rk=(a,b)=>a==b?'':same(a,b)?'conjunct in '+SG[sg(a)]:exch(a,b)?'exchange of signs':'',OK=['Exalted','Own sign','Moolatrikona'],pl5=[2,3,4,5,6];
+{const f=K.includes(hm(4));add('Gajakesari yoga',f,'Jupiter is in house '+hm(4)+' from the Moon (rule: Jupiter in a kendra 1/4/7/10 from the Moon)'+(f&&(R2[4].d=='Debilitated'||R2[4].cb)?'; weakened because Jupiter is debilitated or combust':''))}
+[[2,'Ruchaka'],[3,'Bhadra'],[4,'Hamsa'],[5,'Malavya'],[6,'Shasha']].forEach(a=>{const i=a[0];add(a[1]+' yoga (Pancha Mahapurusha)',OK.includes(R2[i].d)&&K.includes(hf(i)),P(i)+' is '+R2[i].d+' in house '+hf(i)+' (rule: own or exalted sign AND in a kendra from the lagna)')});
+add('Budhaditya yoga',same(0,3),'Sun and Mercury together in '+SG[sg(0)]+', '+sep(L[0],L[3]).toFixed(1)+' degrees apart'+(R2[3].cb?'; Mercury is combust so the effect is weaker':'')+' (rule: same sign)');
+add('Chandra-Mangal yoga',same(1,2)||hm(2)==7,'Moon and Mars '+(same(1,2)?'together':'opposite each other')+' (rule: same sign or opposite signs)');
+{const s2=pl5.filter(i=>hm(i)==2),s12=pl5.filter(i=>hm(i)==12),n=pl5.filter(i=>hm(i)==1),cn=K.includes(hf(1))?'the Moon is in a kendra from the lagna':pl5.some(i=>[4,7,10].includes(hm(i)))?'a planet is in a kendra from the Moon':'',fm=!s2.length&&!s12.length&&!n.length;
+add('Sunapha yoga',s2.length&&!s12.length,s2.map(P).join(', ')+' in the 2nd from the Moon (rule: planet other than Sun/nodes in 2nd from Moon)');
+add('Anapha yoga',s12.length&&!s2.length,s12.map(P).join(', ')+' in the 12th from the Moon (rule: planet other than Sun/nodes in 12th from Moon)');
+add('Duradhara yoga',s2.length&&s12.length,'Planets in both the 2nd and 12th from the Moon');
+add('Kemadruma yoga',fm&&!cn,'No planet (other than Sun/nodes) with the Moon or in the 2nd/12th from it, and no cancelling factor found',fm&&cn?'rule met but cancelled because '+cn:'')}
+{const seen={},hits=[];[4,7,10].forEach(a=>[5,9].forEach(b=>{const A=lord(a),B=lord(b),k=Math.min(A,B)+'-'+Math.max(A,B),r=rk(A,B);if(r&&!seen[k]){seen[k]=1;hits.push(P(A)+' (rules '+rl(A,as).join(',')+') and '+P(B)+' (rules '+rl(B,as).join(',')+'): '+r)}}));
+add('Raja yoga (kendra lord + trikona lord)',hits.length,hits.join('; ')+' (rule: a lord of 4/7/10 and a lord of 5/9 conjunct or exchanging signs)');
+const yk=R2.slice(0,7).filter(r=>r.f=='Yogakaraka').map(r=>P(r.n));add('Yogakaraka planet',yk.length,yk.join(', ')+' rules both a kendra and a trikona for this lagna')}
+{const H=[1,2,5,9,11],hits=[];H.forEach((a,x)=>H.forEach((b,y)=>{if(y<=x||(a!=2&&a!=11&&b!=2&&b!=11))return;const A=lord(a),B=lord(b),r=rk(A,B);if(r)hits.push('lord of house '+a+' ('+P(A)+') & lord of house '+b+' ('+P(B)+'): '+r)}));
+add('Dhana yoga (simplified)',hits.length,hits.join('; ')+' (rule: lords of 1/2/5/9/11, including the 2nd or 11th lord, conjunct or exchanging signs)')}
+[[6,'Harsha'],[8,'Sarala'],[12,'Vimala']].forEach(a=>{const k=lord(a[0]);add('Viparita Raja yoga ('+a[1]+')',[6,8,12].includes(hf(k)),'Lord of house '+a[0]+' ('+P(k)+') is in house '+hf(k)+' (rule: lord of 6/8/12 placed in 6/8/12)')});
+{const nbp=R2.slice(0,7).filter(r=>r.nb.indexOf('present')>=0).map(r=>P(r.n));add('Neecha Bhanga Raja yoga (basic)',nbp.length,nbp.join(', ')+' debilitated with cancellation (rule: lord of the debilitation sign or of the exaltation sign in a kendra from lagna or Moon)')}
+{const ex=[];for(let i=0;i<7;i++)for(let j=i+1;j<7;j++)if(exch(i,j))ex.push(P(i)+' (house '+hf(i)+') and '+P(j)+' (house '+hf(j)+')');add('Parivartana yoga (sign exchange)',ex.length,ex.join('; '))}
+{const mh=[hf(2),hm(2),(sg(2)-sg(5)+12)%12+1],B=[1,2,4,7,8,12],y=mh.map(h=>B.includes(h)),ow=OK.includes(R2[2].d),jm=same(4,2)||R2[4].a.hs.includes(hf(2));
+add('Manglik dosha',y.some(Boolean),'Mars is in house '+mh[0]+' from Lagna ('+(y[0]?'yes':'no')+'), '+mh[1]+' from Moon ('+(y[1]?'yes':'no')+'), '+mh[2]+' from Venus ('+(y[2]?'yes':'no')+'); counted for houses 1,2,4,7,8,12 (house 2 is milder, some traditions omit it)'+(ow?'; reduced because Mars is in its own/exalted sign':'')+(jm?'; reduced by Jupiter conjunct or aspecting Mars':''))}
+{const a=[0,1,2,3,4,5,6].filter(i=>N(L[i]-L[7])<180).length,m=Math.min(a,7-a);
+add('Kaal Sarp dosha',m==0,a==7?'All seven planets lie between Rahu and Ketu (Rahu to Ketu side)':'All seven planets lie on the Ketu to Rahu side of the axis (counted by many, not all, traditions)');
+add('Partial Kaal Sarp pattern',m==1,'Six planets on one side of the Rahu-Ketu axis and one on the other')}
+{const o=(sg30(ts)-sg(1)+12)%12;add('Sade Sati (Saturn today)',[11,0,1].includes(o),'Saturn is now in the '+({11:'12th (rising phase)',0:'1st (peak phase)',1:'2nd (setting phase)'})[o]+' sign from the natal Moon (rule: transit Saturn in 12th/1st/2nd from natal Moon)');
+add('Shani Dhaiya (Saturn today)',o==3||o==7,'Saturn is now in the '+(o==3?'4th':'8th')+' sign from the natal Moon')}
+add('Guru Chandala dosha',same(4,7),'Jupiter and Rahu together in '+SG[sg(4)]);
+add('Grahan dosha',[0,1].some(i=>same(i,7)||same(i,8)),'Sun or Moon in the same sign as Rahu/Ketu');
+add('Shrapit dosha',same(6,7),'Saturn and Rahu together in '+SG[sg(6)]);
+return Y}
+function yText(){const Y=yogas(S.lon,S.asc,S.rt,S.tr[6]),fo=Y.filter(y=>y.f),nf=Y.filter(y=>!y.f),cx=nf.filter(y=>y.c);
+return'== YOGAS AND DOSHAS (strict rule check on D1; "not found" means the rule is not met) ==\n'+(fo.map(y=>'- FOUND: '+y.n+' - '+y.t).join('\n')||'- none found')+(cx.length?'\n'+cx.map(y=>'- '+y.n+': '+y.c).join('\n'):'')+'\nChecked and NOT found: '+nf.map(y=>y.n).join(', ')+(S.tu?'\nNote: birth time is approximate, so lagna-based yogas are uncertain.':'')+'\n\n'}
+function yTable(){const Y=yogas(S.lon,S.asc,S.rt,S.tr[6]),fo=Y.filter(y=>y.f),nf=Y.filter(y=>!y.f);
+$('yg').innerHTML=(fo.map(y=>'<div style="margin:0 0 8px"><b>'+y.n+'</b><br><span class="vk-n" style="margin:0">'+y.t+'</span></div>').join('')||'<div class="vk-n">No listed yoga or dosha rule is met.</div>')+'<div class="vk-n">Checked, not found: '+nf.map(y=>y.n).join(', ')+'</div>'+(S.tu?'<div class="vk-n" style="color:#b3261e">Birth time is approximate, so lagna-based results are uncertain.</div>':'')}
+/*==END PART-5==*/
+/*==PART-6==*/
+const EXL=[10,33,298,165,95,357,200],NB=[60,51.43,42.85,34.28,25.71,17.14,8.57],DZ=[4,10,4,7,7,10,1],KKO=[6,4,2,0,5,3,1,7],VW={1:6,2:2,3:4,9:5,12:2,30:1};
+function sbal(L,c){return L.slice(0,7).map((l,i)=>{const u=sep(l,(EXL[i]+180)%360)/3,d=sep(l,c[DZ[i]-1])/3,h=bh(l,c),k=[1,4,7,10].includes(h)?60:[2,5,8,11].includes(h)?30:15;return{u,d,n:NB[i],k,t:u+d+NB[i]+k}})}
+function digS(i,s,L){if(s==DEX[i]||DOWN[i].includes(s))return 20;if(s==(DEX[i]+6)%12)return 5;const k=LI[s],v=(FRI[i].includes(k)?1:ENE[i].includes(k)?-1:0)+([2,3,4,10,11,12].includes((sg30(L[k])-sg30(L[i])+12)%12+1)?1:-1);return v==2?18:v==1?15:v==-1?7:v==-2?5:10}
+function vimsh(L){return L.slice(0,7).map((l,i)=>Object.keys(VW).reduce((a,n)=>a+VW[n]*digS(i,V(l,+n),L)/20,0))}
+const bnd=(p,q,s,src)=>AVT[p][q].split(',').indexOf(String((s-src[q]+12)%12+1))>=0?1:0,kak=l=>KKO[Math.floor(l%30/3.75)];
+function sdata(){const L=S.lon,as=sg30(S.asc),src=L.slice(0,7).map(sg30).concat([as]),sb=sbal(L,S.cu),vm=vimsh(L),bs=(p,s)=>[0,1,2,3,4,5,6,7].reduce((a,q)=>a+bnd(p,q,s,src),0),sv=s=>[0,1,2,3,4,5,6].reduce((a,p)=>a+bs(p,s),0),rank=[];
+sb.map((o,i)=>[o.t,i]).sort((a,b)=>b[0]-a[0]).forEach((x,r)=>rank[x[1]]=r+1);return{src,sb,vm,bs,sv,rank,hs:S.av.sav.map((v,i)=>[v,i+1]).sort((a,b)=>b[0]-a[0])}}
+function sText(){const D=sdata(),L=S.lon,f=x=>x.toFixed(1),hl=a=>a.map(x=>'house '+x[1]+' ('+x[0]+')').join(', '),ord=D.rank.map((r,i)=>[r,i]).sort((a,b)=>a[0]-b[0]);
+return'== STRENGTH (simplified, rule-based) ==\nPlanet strength in virupas, max 240 (NOT full Shadbala: only Uchcha + Dig + Naisargika + Kendra bala), strongest first: '+ord.map(x=>PF[x[1]]+' '+f(D.sb[x[1]].t)).join(', ')+'\nVimshopaka Bala (Shadvarga D1,D2,D3,D9,D12,D30; max 20): '+D.vm.map((v,i)=>PF[i]+' '+f(v)).join(', ')+'\nNatal Bhinnashtakavarga bindus of each planet in its own sign: '+[0,1,2,3,4,5,6].map(p=>PF[p]+' '+D.bs(p,sg30(L[p]))+'/8').join(', ')+'\nSarvashtakavarga houses (average 28.1): strongest '+hl(D.hs.slice(0,3))+'; weakest '+hl(D.hs.slice(-3).reverse())+'\nTransit kakshya today (each sign has 8 kakshyas of 3 deg 45 min; a transit planet gives its best results when the kakshya lord gave a bindu to its Bhinnashtakavarga in that sign):\n'+S.tr.slice(0,7).map((l,p)=>{const s=sg30(l),q=kak(l);return'- '+PF[p]+' in '+SG[s]+' '+dm(l%30)+': kakshya of '+(q==7?'the Lagna':PF[q])+', bindu '+(bnd(p,q,s,D.src)?'YES':'NO')+'; own bindus in this sign '+D.bs(p,s)+'/8; SAV of this sign '+D.sv(s)}).join('\n')+'\n\n'}
+function sTable(){const D=sdata(),f=x=>x.toFixed(1);$('sb').innerHTML='<tr><th>Planet<th>Uchcha<th>Dig<th>Naisargika<th>Kendra<th>Total<th>Rank<th>Vimshopaka<th>Bindus in own sign</tr>'+D.sb.map((o,i)=>'<tr><td>'+PF[i]+'<td>'+f(o.u)+'<td>'+f(o.d)+'<td>'+f(o.n)+'<td>'+o.k+'<td>'+f(o.t)+'<td>'+D.rank[i]+'<td>'+f(D.vm[i])+'<td>'+D.bs(i,sg30(S.lon[i]))+'/8</tr>').join('');
+$('sn').textContent='Simplified strength (Uchcha + Dig + Naisargika + Kendra, max 240) is for ranking only and is not full Shadbala. Strongest houses by Sarvashtakavarga: '+D.hs.slice(0,3).map(x=>x[1]+' ('+x[0]+')').join(', ')+'; weakest: '+D.hs.slice(-3).reverse().map(x=>x[1]+' ('+x[0]+')').join(', ')+'.'}
+/*==END PART-6==*/
+/*==PART-7==*/
+const MS=864e5,tp=(t,p)=>pos(t/MS+2440587.5)[p],bis=(f,a,b)=>{for(let i=0;i<22;i++){const m=(a+b)/2;if(f(m))b=m;else a=m}return b},INF={4:[0,4,6,8],6:[0,2,6,9]},inf=(h,p)=>INF[p].map(k=>(h+k-1)%12+1);
+function scan(p,t0,t1,st){const sgn=t=>sg30(tp(t,p)),rf=t=>p==7?0:N(tp(t+432e5,p)-tp(t-432e5,p))>180?1:0,o={s0:sgn(t0),ev:[],stn:[]};let a=t0,sa=o.s0,ra=rf(t0);
+for(let t=t0;t<t1;){t=Math.min(t+st,t1);const sb=sgn(t),rb=rf(t);
+if(sb!=sa){const f=sa;o.ev.push({t:bis(m=>sgn(m)!=f,a,t),f:sa,to:sb});sa=sb}
+if(rb!=ra){const q=ra,x=bis(m=>rf(m)!=q,a,t);o.stn.push({t:x,r:rb,s:sgn(x),l:tp(x,p)%30});ra=rb}a=t}return o}
+function tdata(){const t0=S.now,t1=t0+730.5*MS,as=sg30(S.asc),ms=sg30(S.lon[1]),hh=x=>(x-as+12)%12+1,J=scan(4,t0,t1,2*MS),Sa=scan(6,t0,t1,3*MS),Ra=scan(7,t0,t1,6*MS),W=scan(6,t0-3*365.25*MS,t0+30*365.25*MS,6*MS),
+E=J.ev.map(e=>({t:e.t,p:4,to:e.to})).concat(Sa.ev.map(e=>({t:e.t,p:6,to:e.to}))).sort((a,b)=>a.t-b.t),iv=[];let c=t0,js=J.s0,ss=Sa.s0;
+const cl=t=>{const a=inf(hh(js),4),b=inf(hh(ss),6);iv.push({s:c,e:t,d:a.filter(h=>b.includes(h)).sort((x,y)=>x-y),js,ss});c=t};
+E.forEach(e=>{cl(e.t);if(e.p==4)js=e.to;else ss=e.to});cl(t1);return{t0,t1,as,ms,J,Sa,Ra,W,iv}}
+function tText(){if(!S.t7)S.t7=tdata();const T=S.t7,f=iso,hh=x=>(x-T.as+12)%12+1,mm=x=>(x-T.ms+12)%12+1,cat=CAT[$('cat').value],ev=[],bk=e=>e.to==(e.f+1)%12?'':' (retrograde re-entry)';
+[[4,T.J],[6,T.Sa],[7,T.Ra]].forEach(a=>{const p=a[0];a[1].ev.forEach(e=>ev.push([e.t,f(e.t)+' '+PF[p]+' enters '+SG[e.to]+bk(e)+(p==7?' (Ketu enters '+SG[(e.to+6)%12]+')':'')+': house '+hh(e.to)+' from Lagna, '+mm(e.to)+' from Moon']));
+a[1].stn.forEach(x=>ev.push([x.t,f(x.t)+' '+PF[p]+' stations '+(x.r?'retrograde':'direct')+' at '+SG[x.s]+' '+dm(x.l)+' (house '+hh(x.s)+')']))});
+const LB={11:'Sade Sati begins (12th from Moon)',0:'Sade Sati peak (over Moon)',1:'Sade Sati setting phase (2nd from Moon)',2:'Sade Sati ends (3rd from Moon)',3:'Shani Dhaiya begins (4th from Moon)',4:'Dhaiya ends',7:'Shani Dhaiya begins (8th from Moon)',8:'Dhaiya ends'},
+sa=T.W.ev.filter(e=>LB[(e.to-T.ms+12)%12]).map(e=>f(e.t)+' Saturn '+(bk(e)?'moves back into '+SG[e.to]+' (temporary retrograde re-entry, Saturn goes forward again later)':'enters '+SG[e.to]+': '+LB[(e.to-T.ms+12)%12])),n=T.iv[0];
+return'== TRANSIT TIMING (computed, next 24 months from today; sidereal Lahiri; houses from Lagna unless stated) ==\nSign changes and stations:\n'+(ev.sort((a,b)=>a[0]-b[0]).map(x=>'- '+x[1]).join('\n')||'- none')+
+'\nDouble transit rule: Jupiter (itself, 5th, 7th, 9th) and Saturn (itself, 3rd, 7th, 10th) both influence the house. Now: Jupiter house '+hh(n.js)+', Saturn house '+hh(n.ss)+'; double-transit houses now: '+(n.d.join(', ')||'none')+
+'\nDouble-transit windows for '+cat[0]+' (key houses):\n'+cat[2].map(h=>{const w=[];T.iv.forEach(v=>{if(v.d.includes(h)){const l=w[w.length-1];if(l&&l.e==v.s)l.e=v.e;else w.push({s:v.s,e:v.e})}});return'- house '+h+': '+(w.map(x=>f(x.s)+' to '+f(x.e)+(x.e>=T.t1?' (or beyond)':'')).join(', ')||'no double transit in this period')}).join('\n')+
+'\nSaturn from the natal Moon ('+SG[T.ms]+'), 3 years back to 30 years ahead:\n'+(sa.map(x=>'- '+x).join('\n')||'- none in range')+
+'\nLimits: dates come from the Keplerian engine (Jupiter and Saturn about 1 day, mean Rahu about 2 days); double transit is a simplified timing filter and ignores kakshya and Ashtakavarga; windows show when conditions are met, not guaranteed events.\n\n'}
+/*==END PART-7==*/
+/*==PART-8==*/
+const GA='DMRMDMDDRRMMDRDRDRRMMDRRMMD',VRN=[3,2,1,4,3,2,1,4,3,2,1,4],YN=[0,1,2,3,3,4,5,2,5,6,6,7,8,9,8,9,10,10,4,11,12,11,13,0,13,7,1],YE=['0-8','1-13','2-11','3-12','4-10','5-6','7-9'],
+YA='Horse,Elephant,Sheep,Serpent,Dog,Cat,Rat,Cow,Buffalo,Tiger,Deer,Monkey,Mongoose,Lion'.split(','),VG=l=>[0,0,1,2,3,1,1,4,l%30<15?1:0,l%30<15?0:2,1,2][sg30(l)],GK={D:'Deva',M:'Manushya',R:'Rakshasa'},
+KAR={daily:[1],general:[0,1],love:[5,1],marriage:[5,4],career:[0,6,3],wealth:[4,5],health:[0,1],education:[3,4],children:[4]},
+RULES=['# STRICT RULES','1. Use ONLY facts listed in CHART DATA. If something is not listed, say "not in the data" instead of guessing.','2. Every claim must rest on a placement, dasha or transit that is listed. Never invent degrees, dates, yogas or planets.','3. Quote dates only from the dasha, transit and matching blocks; any other timing must be called approximate.','4. Treat "not found" yogas as absent. Strength numbers are for ranking only (not Shadbala).','5. If two indications conflict, say so and show the uncertainty. No fear-based, medical, legal or financial certainty, and no predictions of death or accidents.'].join('\n')+'\n\n',
+LEN={s:'# ANSWER LENGTH\nShort mode: at most 150 words, only the 3 most important points.\n\n',m:'# ANSWER LENGTH\nStandard mode: about 300-450 words.\n\n',d:'# ANSWER LENGTH\nDeep mode: a full analysis of up to about 900 words, with reasons.\n\n'};
+function ash(b,g){const u=360/27,nb=Math.floor(b/u),ng=Math.floor(g/u),sb=sg30(b),sg=sg30(g),rel=(x,y)=>FRI[x].includes(y)?1:ENE[x].includes(y)?-1:0,lb=LI[sb],lg=LI[sg],ms=lb==lg?2:rel(lb,lg)+rel(lg,lb),
+tb=((nb-ng+27)%27+1)%9,tg=((ng-nb+27)%27+1)%9,bd=x=>[3,5,7].includes(x),gb=GA[nb],gg=GA[ng],ya=YN[nb],yb=YN[ng],bk=(sb-sg+12)%12+1,nd=n=>[0,1,2,2,1,0][n%6],vb=VG(b),vg=VG(g),
+gs=gb==gg||gb=='D'&&gg=='M'?6:gb=='M'&&gg=='D'?5:gb=='D'&&gg=='R'?1:0,tr=(bd(tb)?0:1.5)+(bd(tg)?0:1.5);
+return[['Varna',1,VRN[sb]>=VRN[sg]?1:0,'boy sign varna '+VRN[sb]+' vs girl '+VRN[sg]],
+['Vashya',2,vb==vg?2:null,vb==vg?'same group':'different groups, cross table differs by source'],
+['Tara',3,tr,'remainders boy-to-girl '+(tg||9)+', girl-to-boy '+(tb||9)+' (3, 5, 7 are unfavourable)'],
+['Yoni',4,ya==yb?4:YE.includes(Math.min(ya,yb)+'-'+Math.max(ya,yb))?0:null,YA[ya]+' (boy) / '+YA[yb]+' (girl)'+(ya==yb?', same':YE.includes(Math.min(ya,yb)+'-'+Math.max(ya,yb))?', sworn enemies':', other pair: table differs by source')],
+['Graha Maitri',5,ms>=1?ms==2?5:4:ms==0?(rel(lb,lg)==0?3:1):ms==-1?.5:0,PF[lb]+' (boy) / '+PF[lg]+' (girl) sign lords'],
+['Gana',6,gs,GK[gb]+' (boy) / '+GK[gg]+' (girl)'],
+['Bhakoot',7,[2,12,5,9,6,8].includes(bk)?0:7,'boy sign is number '+bk+' counted from the girl sign'],
+['Nadi',8,nd(nb)==nd(ng)?0:8,nd(nb)==nd(ng)?'same nadi (dosha)':'different nadi']]}
+function mdata(){const p=pl()[$('mt').value];if(!p||!p.dt||!p.tm||p.tz===''||p.tz==null)return null;const[y,m,d]=p.dt.split('-').map(Number),[h,i]=p.tm.split(':').map(Number),jd=JD(y,m,d,h+i/60-+p.tz),L=pos(jd),g=$('gn').value,cg=g=='Female'||(g!='Male'&&p.gn=='Male'),
+rows=ash(cg?L[1]:S.lon[1],cg?S.lon[1]:L[1]),mg=(l,a,r)=>yogas(l,a,r,S.tr[6]).find(y=>y.n=='Manglik dosha').f,k=rows.filter(r=>r[2]!=null);
+return{b:cg?L[1]:S.lon[1],g:cg?S.lon[1]:L[1],rows,tot:sum(k.map(r=>r[2])),mx:sum(k.map(r=>r[1])),mc:mg(S.lon,S.asc,S.rt),mo:mg(L,asc(jd,+p.lat,+p.lon),retro(jd)),nt:'current chart is the '+(cg?'girl':'boy')+(g=='Male'||g=='Female'?'':' (assumed from the gender fields)')+(p.tu?'; the other birth time is approximate':'')}}
+function mText(){const M=mdata();if(!M)return'';return'== KUNDLI MATCHING (Ashtakoota from the two Moon positions; '+M.nt+') ==\nBoy Moon: '+SG[sg30(M.b)]+', '+nk(M.b)+'. Girl Moon: '+SG[sg30(M.g)]+', '+nk(M.g)+'.\n'+M.rows.map(r=>'- '+r[0]+' (max '+r[1]+'): '+(r[2]==null?'not scored ('+r[3]+')':r[2]+' - '+r[3])).join('\n')+'\nTotal '+M.tot+' of '+M.mx+' scored points (Vashya and Yoni are scored only when the table is unambiguous). Manglik: current chart '+(M.mc?'YES':'no')+', other chart '+(M.mo?'YES':'no')+'.\nUse this only if the question is about the relationship.\n\n'}
+function fText(){const R2=stat(S.lon,S.asc,S.rt),H=hrows(),k=$('cat').value,c=CAT[k],D=dasInfo(S.birth,S.lon[1],S.now),sv=S.av.sav,n=(S.t7||(S.t7=tdata())).iv[0];
+return'== TOPIC FACTS: '+c[0]+' (pre-computed from the data below; start from these) ==\n'+c[2].map(h=>{const r=H.rows[h-1];return'- House '+h+' '+SG[r.s]+': lord '+PF[r.k]+' in house '+r.lh+' ('+r.d+'); occupants '+(r.pl.join(', ')||'none')+'; aspected by '+(r.ah.join(', ')||'none')+'; SAV '+sv[h-1]+(sv[h-1]>=28?' (good)':' (low)')+'; double transit now '+(n.d.includes(h)?'YES':'no')}).join('\n')+
+'\n- Karakas: '+KAR[k].map(i=>{const r=R2[i];return PF[i]+' house '+r.h+', '+r.d+(r.cb?', combust':'')+(r.r?', retrograde':'')}).join('; ')+
+(D.sd?'\n- Dasha link: '+[[D.md.l,'Mahadasha'],[D.ad.l,'Antardasha']].map(x=>{const i=pfi(x[0]),r=R2[i];return x[1]+' '+PF[i]+' rules house(s) '+(r.ru.join(',')||'none (node)')+', sits in house '+r.h+'; touches key houses '+(c[2].filter(h=>r.ru.includes(h)||r.h==h).join(',')||'none')}).join('; '):'')+'\n\n'}
+/*==END PART-8==*/
+/*==PART-9==*/
+function dsum(){const Y=yogas(S.lon,S.asc,S.rt,S.tr[6]),D=dasInfo(S.birth,S.lon[1],S.now),Z=sdata(),T=S.t7||(S.t7=tdata()),pr=Z.rank.map((r,i)=>[r,i]).sort((a,b)=>a[0]-b[0]),hl=a=>a.map(x=>'H'+x[1]+' ('+x[0]+')').join(', '),p2=x=>String(x).padStart(2,'0'),
+dr=/dosha|Sade|Dhaiya|Kaal|Kemadruma/,dz=Y.filter(y=>y.f&&dr.test(y.n)).map(y=>y.n),yg=Y.filter(y=>y.f&&!dr.test(y.n)).map(y=>y.n.replace(/ yoga.*/,''));
+return['Birth: '+S.y+'-'+p2(S.m)+'-'+p2(S.d)+' '+S.tm+', '+S.place+(S.tu?' (time approximate)':''),
+'Lagna '+SG[sg30(S.asc)]+' '+dm(S.asc%30)+'; Moon '+SG[sg30(S.lon[1])]+', '+nk(S.lon[1])+'; Sun '+SG[sg30(S.lon[0])],
+'Dasha now: '+(D.sd?DL[D.md.l]+' > '+DL[D.ad.l]+' > '+DL[D.pd.l]+' (Antardasha until '+iso(D.ad.e)+')':'not available'),
+'Strongest planet: '+PF[pr[0][1]]+'; weakest: '+PF[pr[6][1]]+' (simplified ranking)',
+'Strongest houses (SAV): '+hl(Z.hs.slice(0,3))+'; weakest: '+hl(Z.hs.slice(-3).reverse()),
+'Yogas found: '+(yg.join(', ')||'none'),'Doshas and flags: '+(dz.join(', ')||'none'),
+'Double-transit houses now: '+(T.iv[0].d.join(', ')||'none')]}
+function dash(){const L=dsum();S.sm=L.join('\n')+'\n(Guidance only, not a guarantee.)';$('kf').innerHTML='<b>Your key details</b>'+L.map(x=>'<div class="vk-n" style="margin:4px 0">'+x.replace(/</g,'&lt;')+'</div>').join('');$('ph').textContent=($('nm').value?$('nm').value+' | ':'')+L[0]}
+function a11y(){document.querySelectorAll('#vk th').forEach(h=>h.setAttribute('scope','col'));document.querySelectorAll('#vk .vk-w table').forEach(t=>{const h=t.closest('.vk-w').previousElementSibling;t.setAttribute('aria-label',h&&h.tagName=='H3'?h.textContent:'Planet positions')});
+const v=$('chart').querySelector('svg');if(v){v.setAttribute('role','img');v.setAttribute('aria-label',$('ct').textContent+' ('+(sty=='n'?'North':'South')+' Indian style); the same data is in the table below')}$('st').setAttribute('role','status');$('kf').setAttribute('aria-label','Chart summary')}
+$('pp').onclick=()=>window.print();
+$('cs').onclick=()=>{if(!S)return;let r;try{r=navigator.clipboard.writeText(S.sm)}catch(e){r=Promise.reject()}r.then(()=>0,()=>{const a=document.createElement('textarea');a.value=S.sm;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove()}).then(()=>{$('cs').textContent='Copied \u2713';setTimeout(()=>$('cs').textContent='Copy summary',1800)})};
+if(navigator.share)$('sh').hidden=false;$('sh').onclick=()=>{if(S)navigator.share({title:'My birth chart summary',text:S.sm}).catch(()=>{})};
+/*==END PART-9==*/
+function dTs(jd){const y=2000+(jd-2451545)/365.25,u=(y-1820)/100;let t;
+if(y<1900)return-20+32*u*u;
+if(y<1920){t=y-1900;return-2.79+1.494119*t-.0598939*t*t+.0061966*t**3-.000197*t**4}
+if(y<1941){t=y-1920;return 21.2+.84493*t-.0761*t*t+.0020936*t**3}
+if(y<1961){t=y-1950;return 29.07+.407*t-t*t/233+t**3/2547}
+if(y<1986){t=y-1975;return 45.45+1.067*t-t*t/260-t**3/718}
+if(y<2005){t=y-2000;return 63.86+.3345*t-.060374*t*t+.0017275*t**3+.000651814*t**4+.00002373599*t**5}
+if(y<2050){t=y-2000;return 62.92+.32217*t+.005589*t*t}
+return-20+32*u*u-(y<2150?.5628*(2150-y):0)}
+const MT=[[0,0,1,0,6288774],[2,0,-1,0,1274027],[2,0,0,0,658314],[0,0,2,0,213618],[0,1,0,0,-185116],[0,0,0,2,-114332],[2,0,-2,0,58793],[2,-1,-1,0,57066],[2,0,1,0,53322],[2,-1,0,0,45758],[0,1,-1,0,-40923],[1,0,0,0,-34720],[0,1,1,0,-30383],[2,0,0,-2,15327],[0,0,1,2,-12528],[0,0,1,-2,10980],[4,0,-1,0,10675],[0,0,3,0,10034],[4,0,-2,0,8548],[2,1,-1,0,-7888],[2,1,0,0,-6766],[1,0,-1,0,-5163],[1,1,0,0,4987],[2,-1,1,0,4036],[2,0,2,0,3994],[4,0,0,0,3861],[2,0,-3,0,3665],[0,1,-2,0,-2689],[2,0,-1,2,-2602],[2,-1,-2,0,2390],[1,0,1,0,-2348],[2,-2,0,0,2236],[0,1,2,0,-2120],[0,2,0,0,-2069],[2,-2,-1,0,2048],[2,0,1,-2,-1773],[2,0,0,2,-1595],[4,-1,-1,0,1215],[0,0,2,2,-1110],[3,0,-1,0,-892],[2,1,1,0,-810],[4,-1,-2,0,759],[0,2,-1,0,-713],[2,2,-1,0,-700],[2,1,-2,0,691],[2,-1,0,-2,596],[4,0,1,0,549],[0,0,4,0,537],[4,-1,0,0,520],[1,0,-2,0,-487],[2,1,0,-2,-399],[0,0,2,-2,-381],[1,1,1,0,351],[3,0,-2,0,-340],[4,0,-3,0,330],[2,-1,2,0,327],[0,2,1,0,-323],[1,1,-1,0,299],[2,0,3,0,294]];
+function moon(T){const t2=T*T,t3=t2*T,L=218.3164477+481267.88123421*T-.0015786*t2+t3/538841,D=(297.8501921+445267.1114034*T-.0018819*t2+t3/545868)*R,M=(357.5291092+35999.0502909*T-.0001536*t2)*R,P=(134.9633964+477198.8675055*T+.0087414*t2+t3/69699)*R,F=(93.272095+483202.0175233*T-.0036539*t2-t3/3526000)*R,E=1-.002516*T-.0000074*t2,s=Math.sin;
+let x=3958*s((119.75+131.849*T)*R)+1962*s(L*R-F)+318*s((53.09+479264.29*T)*R);
+MT.forEach(r=>{const k=Math.abs(r[1]);x+=r[4]*(k==1?E:k==2?E*E:1)*s(r[0]*D+r[1]*M+r[2]*P+r[3]*F)});
+return N(L+x/1e6-ay(T))}
+function pos(jd){const T=(jd+dTs(jd)/864e2-2451545)/36525,e=hel('Ea',T),g=k=>{const p=hel(k,T);return N(Math.atan2(p[1]-e[1],p[0]-e[0])/R-23.8571)},ra=N(nodeL(T)-ay(T));
+return[N(Math.atan2(-e[1],-e[0])/R-23.8571-.00569/Math.hypot(e[0],e[1])),moon(T),g('Ma'),g('Me'),g('Ju'),g('Ve'),g('Sa'),ra,N(ra+180)]}
+function retro(jd){const a=pos(jd-.5),b=pos(jd+.5);return a.map((x,i)=>[2,3,4,5,6].includes(i)&&N(b[i]-x)>180)}
+function JD(y,m,d,h){if(m<3){y--;m+=12}const A=Math.floor(y/100),B=2-A+Math.floor(A/4);return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5+h/24}
+function asc(jd,lat,lon){const T=(jd-2451545)/36525,th=N(280.46061837+360.98564736629*(jd-2451545)+lon)*R,ep=(23.4392911-.0130042*T)*R;
+return N(Math.atan2(Math.cos(th),-(Math.sin(th)*Math.cos(ep)+Math.tan(lat*R)*Math.sin(ep)))/R-ay(T))}
+function V(L,n){const s=Math.floor(L/30),d=L%30,p=Math.floor(d*n/30),o=s%2==0,m=s%3;
+switch(n){case 1:return s;case 2:return o?(d<15?4:3):(d<15?3:4);case 3:return(s+4*p)%12;case 4:return(s+3*p)%12;case 7:return((o?s:s+6)+p)%12;case 9:return([s,s+8,s+4][m]+p)%12;case 10:return((o?s:s+8)+p)%12;case 12:return(s+p)%12;case 16:return([0,4,8][m]+p)%12;case 20:return([0,8,4][m]+p)%12;case 24:return((o?4:3)+p)%12;case 27:return([0,3,6,9][s%4]+p)%12;
+case 30:return o?(d<5?0:d<10?10:d<18?8:d<25?2:6):(d<5?1:d<12?5:d<20?11:d<25?9:7);case 40:return((o?0:6)+p)%12;case 45:return([0,4,8][m]+p)%12;case 60:return(s+p)%12}}
+const VN=[2,3,4,7,9,10,12,16,20,24,27,30,40,45,60];
+const CAT={daily:['Daily horoscope',[],[1,4,7,10]],general:['General',[9,10],[1,4,7,10]],love:['Love',[9,7],[5,7,11,12]],marriage:['Marriage',[9,2],[2,7,8,11,12]],career:['Career',[10,9],[2,6,10,11]],wealth:['Wealth',[2,9],[2,5,9,11]],health:['Health',[9,30],[1,6,8,12]],education:['Education',[24,9],[4,5,9]],children:['Children',[7,9],[2,5,9]]};
+const VNAME={2:'Hora',3:'Drekkana',4:'Chaturthamsa',7:'Saptamsa',9:'Navamsa',10:'Dashamsa',12:'Dwadashamsa',16:'Shodashamsa',20:'Vimshamsa',24:'Siddhamsa',27:'Bhamsa',30:'Trimshamsa',40:'Khavedamsa',45:'Akshavedamsa',60:'Shashtiamsa'};
+const dm=d=>Math.floor(d)+"\u00b0"+String(Math.floor(d%1*60)).padStart(2,"0")+"'";
+const nk=l=>NK[Math.floor(l/(360/27))]+" pada "+(Math.floor(l%(360/27)/(360/108))+1);
+let S,mode='D1',sty='n';
+$('city').add(new Option('— Select your city —',''));CITY.forEach((c,i)=>$('city').add(new Option(c[0],i)));
+$('city').onchange=()=>{const c=CITY[$('city').value];if(!c)return;$('lat').value=c[1];$('lon').value=c[2];$('tz').value=''};
+let ZN=null,ZP='';
+const er=m=>{$('err').textContent=m;$('err').hidden=!m};const rz=()=>{ZN=null;ZP='';$('pm').textContent=''};
+['lat','lon','tz'].forEach(i=>$(i).addEventListener('input',rz));['dt','tm','pq'].forEach(i=>$(i).addEventListener('input',()=>er('')));$('pq').addEventListener('input',()=>{rz();$('lat').value='';$('lon').value='';$('tz').value='';$('pm').style.color=''});$('city').addEventListener('change',rz);
+$('city').addEventListener('change',()=>{const c=CITY[$('city').value];if(!c)return;ZN=c[3];ZP=c[0];$('pm').innerHTML='<b style="color:#1b7a3a">&#10004; You selected: '+c[0]+'</b>';$('tzw').hidden=true});
+$('cityb').onclick=()=>{$('city').hidden=!$('city').hidden;if(!$('city').hidden)$('city').focus()};
+function zoff(z,y,m,d,h,mi){const f=new Intl.DateTimeFormat('en-US',{timeZone:z,hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric'});
+const lo=t=>{const p=Object.fromEntries(f.formatToParts(new Date(t)).map(x=>[x.type,x.value]));return Date.UTC(+p.year,p.month-1,+p.day,+p.hour,+p.minute)};
+let g=Date.UTC(y,m-1,d,h,mi),o=lo(g)-g;g-=o;o=lo(g)-g;return o/36e5}
+$('pq').onkeydown=e=>{if(e.key=='Enter')$('ps').click()};
+const CCZ={in:'Asia/Kolkata',np:'Asia/Kathmandu',lk:'Asia/Colombo',bd:'Asia/Dhaka',pk:'Asia/Karachi',bt:'Asia/Thimphu',af:'Asia/Kabul',ae:'Asia/Dubai',sa:'Asia/Riyadh',qa:'Asia/Qatar',kw:'Asia/Kuwait',om:'Asia/Muscat',bh:'Asia/Bahrain',sg:'Asia/Singapore',my:'Asia/Kuala_Lumpur',th:'Asia/Bangkok',vn:'Asia/Ho_Chi_Minh',ph:'Asia/Manila',hk:'Asia/Hong_Kong',cn:'Asia/Shanghai',jp:'Asia/Tokyo',kr:'Asia/Seoul',gb:'Europe/London',ie:'Europe/Dublin',fr:'Europe/Paris',de:'Europe/Berlin',it:'Europe/Rome',es:'Europe/Madrid',nl:'Europe/Amsterdam',be:'Europe/Brussels',ch:'Europe/Zurich',at:'Europe/Vienna',se:'Europe/Stockholm',no:'Europe/Oslo',dk:'Europe/Copenhagen',fi:'Europe/Helsinki',pl:'Europe/Warsaw',gr:'Europe/Athens',tr:'Europe/Istanbul',il:'Asia/Jerusalem',nz:'Pacific/Auckland',za:'Africa/Johannesburg',ke:'Africa/Nairobi',ng:'Africa/Lagos',eg:'Africa/Cairo',mu:'Indian/Mauritius',fj:'Pacific/Fiji'};
+const TUL={m:'morning',a:'afternoon',e:'evening',n:'night',l:'late night / pre-dawn',x:'time completely unknown'};
+let AT=0;$('pq').addEventListener('input',()=>{clearTimeout(AT);const q=$('pq').value.trim();if(q.length>=3)AT=setTimeout(()=>$('ps').click(),1200)});
+$('tzs').onchange=()=>{ZN=$('tzs').value||null;er('');if(ZN){const[y,mo,d]=($('dt').value||'2000-01-01').split('-').map(Number),[h,mi]=($('tm').value||'12:00').split(':').map(Number);$('tz').value=zoff(ZN,y,mo,d,h,mi)}else $('tz').value=''};
+let LQ=0,SEQ=0;const esc=s=>String(s).replace(/[<>&"]/g,'');
+function ap(r){ZN=null;try{new Intl.DateTimeFormat('en',{timeZone:r.tz});ZN=r.tz}catch(e){}
+$('lat').value=(+r.lat).toFixed(4);$('lon').value=(+r.lon).toFixed(4);ZP=esc(r.full||r.name);$('tzw').hidden=!!ZN;if(!ZN){$('tzs').value='';$('tz').value=''}$('city').hidden=true;
+if(ZN){const[y,mo,d]=($('dt').value||'2000-01-01').split('-').map(Number),[h,mi]=($('tm').value||'12:00').split(':').map(Number);$('tz').value=zoff(ZN,y,mo,d,h,mi)}
+$('pi').innerHTML='<b style="color:#1b7a3a">&#10004; You selected: '+esc(r.name)+'</b><br>'+(+r.lat).toFixed(4)+', '+(+r.lon).toFixed(4)+(ZN?' | '+ZN:'')+' | <a href="https://www.openstreetmap.org/?mlat='+(+r.lat)+'&mlon='+(+r.lon)+'#map=11/'+(+r.lat)+'/'+(+r.lon)+'" target="_blank" rel="noopener">Check on map</a>'}
+$('ps').onclick=async()=>{const q=$('pq').value.trim(),m=$('pm');if(!q)return;m.textContent='Searching…';
+const p=q.split(','),rest=p.slice(1).join(' ').toLowerCase().split(/\s+/).filter(Boolean);let L=null;
+if(Date.now()-LQ<1100){setTimeout(()=>$('ps').click(),1150-(Date.now()-LQ));return}LQ=Date.now();const SQ=++SEQ;
+try{const j=await(await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&accept-language=en&q='+encodeURIComponent(q))).json();
+L=j.map(x=>{const a=x.address||{},sg={},nm=[String(x.display_name||'').split(',')[0].trim(),a.state_district||a.county,a.state,a.country].filter(Boolean).filter(s=>{s=String(s).trim();if(sg[s])return false;sg[s]=1;return true}).join(', ');return{name:nm||x.display_name,full:x.display_name,lat:+x.lat,lon:+x.lon,tz:(()=>{try{return window.tzlookup?window.tzlookup(+x.lat,+x.lon):null}catch(e){return null}})()||CCZ[String(a.country_code||'').toLowerCase()]||null}})}catch(e){}
+if(SQ!==SEQ)return;if(L&&!L.length){m.textContent='Place not found. Try typing just the city name (e.g. Jaipur) or check the spelling. You can also pick a city from the list below.';$('city').hidden=false;return}
+if(!L){m.textContent='Search is not working right now. Please pick your city from the list below, or try again after a while.';$('city').hidden=false;return}
+const sc=r=>rest.filter(w=>(r.full||r.name).toLowerCase().includes(w)).length;L.sort((a,b)=>sc(b)-sc(a));
+m.innerHTML='<div style="font-weight:600;margin-bottom:4px">Select your exact place from below:</div><select id="vk-pr">'+L.map((r,i)=>'<option value="'+i+'">'+esc(r.name)+'</option>').join('')+'</select><div id="vk-pi" class="vk-n"></div>';
+const pick=()=>ap(L[$('pr').value]);$('pr').onchange=pick;pick()};
+for(const k in CAT)$('cat').add(new Option(CAT[k][0],k));
+const tl=[['D1','D1 Lagna'],['Moon','Moon chart'],['Gochar','Transit (Gochar)'],['Chalit','Chalit']];
+tl.forEach(t=>{const b=document.createElement('button');b.textContent=t[1];b.className='vk-sec vk-auto';b.dataset.m=t[0];b.onclick=()=>{mode=t[0];render()};$('tabs').append(b)});
+$('vsel').add(new Option('Other D-charts…',''));VN.forEach(n=>$('vsel').add(new Option('D'+n,'D'+n)));
+$('vsel').onchange=()=>{if($('vsel').value){mode=$('vsel').value;render()}};
+$('sty').onclick=()=>{sty=sty=='n'?'s':'n';$('sty').textContent='Style: '+(sty=='n'?'North Indian':'South Indian');render()};
+$('go').onclick=()=>{const dt=$('dt').value,tm=$('tm').value;er('');if(!dt||!tm){er(window.vkDtErr?window.vkDtErr():'Please enter your date of birth and time of birth.');try{$(!dt?'dd':'th').focus();$(!dt?'dd':'th').scrollIntoView({block:'center'})}catch(e){}return}
+if(!$('lat').value||!$('lon').value){er('Please select your place of birth: type the city name and tap the correct name from the list that appears.');try{$('pq').focus();$('pq').scrollIntoView({block:'center'})}catch(e){}return}
+if($('tz').value===''&&!ZN){er('Please tell us which time zone your place of birth is in.');try{$('tzw').hidden=false;$('tzs').scrollIntoView({block:'center'});$('tzs').focus()}catch(e){}return}
+const[y,m,d]=dt.split('-').map(Number),[hh,mm]=tm.split(':').map(Number),lat=+$('lat').value,lon=+$('lon').value,tz=ZN?zoff(ZN,y,m,d,hh,mm):+$('tz').value;$('tz').value=tz;
+NODE=$('nd').value=='t'?'t':'m';const jd=JD(y,m,d,hh+mm/60-tz),now=Date.now(),jn=now/864e5+2440587.5;
+const L=pos(jd);S={y,m,d,tm,lat,lon,tz,jd,glon:lon,lon:L,asc:asc(jd,lat,lon),mc:mcL(jd,lon),rt:retro(jd),tr:pos(jn),trt:retro(jn),birth:Date.UTC(y,m-1,d,hh,mm)-tz*36e5,now,place:ZP||'Manual latitude/longitude'};S.cu=cusps(S.asc,S.mc);S.av=avk();S.sr=sunrs();S.tu=$('tu').value;
+$('res').hidden=false;mode='D1';render();saveP();$('res').scrollIntoView()};
+function cd(m){const L=S.lon,A=S.asc,as=Math.floor(A/30),mk=(f,t,r)=>L.map((l,i)=>({n:i,s:f(l),d:t?l%30:null,r:r?r[i]:false}));
+if(m=='D1')return{a:as,p:mk(l=>Math.floor(l/30),1,S.rt)};if(m=='Moon')return{a:Math.floor(L[1]/30),p:mk(l=>Math.floor(l/30),1,S.rt)};
+if(m=='Gochar')return{a:as,p:S.tr.map((l,i)=>({n:i,s:Math.floor(l/30),d:l%30,r:S.trt[i]}))};
+if(m=='Chalit')return{a:as,p:mk(l=>(as+bh(l,S.cu)-1)%12,1,S.rt)};
+const n=+m.slice(1);return{a:V(A,n),p:mk(l=>V(l,n),0,S.rt)}}
+const hs=(c,p)=>(p.s-c.a+12)%12+1;
+function lines(c){return c.p.map(p=>({t:PN[p.n]+(p.r?'(R)':'')+(p.d!=null?' '+dm(p.d):''),s:p.s}))}
+function north(c){const Pc=[[200,75],[100,40],[40,100],[70,200],[40,300],[100,360],[200,325],[300,360],[360,300],[330,200],[360,100],[300,40]],
+Sc=[[200,190],[100,88],[88,100],[188,200],[88,300],[100,312],[200,212],[300,312],[312,300],[212,200],[312,100],[300,88]],ls=lines(c);
+let o='<svg viewBox="0 0 400 400" font-size="12" text-anchor="middle"><g fill="none" stroke="var(--ln)" stroke-width="2"><rect x="1" y="1" width="398" height="398"/><path d="M0 0L400 400M400 0L0 400M200 0L0 200L200 400L400 200Z"/></g>';
+for(let h=1;h<=12;h++){const s=(c.a+h-1)%12;o+=`<text class="vk-sn" x="${Sc[h-1][0]}" y="${Sc[h-1][1]+4}">${s+1}</text>`;
+const it=ls.filter(x=>(x.s-c.a+12)%12+1==h);it.forEach((x,i)=>{o+=`<text x="${Pc[h-1][0]}" y="${Pc[h-1][1]+i*15-(it.length-1)*7.5}">${x.t}</text>`})}
+return o+'</svg>'}
+function south(c){const G=[[1,0],[2,0],[3,0],[3,1],[3,2],[3,3],[2,3],[1,3],[0,3],[0,2],[0,1],[0,0]],ls=lines(c);
+let o='<svg viewBox="0 0 400 400" font-size="11" text-anchor="middle"><g fill="none" stroke="var(--ln)" stroke-width="2"><rect x="1" y="1" width="398" height="398"/><path d="M100 0V400M200 0V100M200 300V400M300 0V400M0 100H400M0 200H100M300 200H400M0 300H400"/></g>';
+for(let s=0;s<12;s++){const[x,y]=G[s];o+=`<text class="vk-sn" x="${x*100+12}" y="${y*100+14}">${s+1}</text>`;let k=0;if(s==c.a)o+=`<text x="${x*100+50}" y="${y*100+30}" style="font-weight:700">Asc</text>`,k=1;
+ls.filter(p=>p.s==s).forEach(p=>{o+=`<text x="${x*100+50}" y="${y*100+30+k++*15}">${p.t}</text>`})}
+return o+'</svg>'}
+function render(){const c=cd(mode);$('tuw2').hidden=!S.tu;document.querySelectorAll('#vk-tabs button').forEach(b=>{const on=b.dataset.m==mode;b.classList.toggle('vk-on',on);b.setAttribute('aria-pressed',on)});$('kf').innerHTML='<b>Your key details</b><br>Lagna (ascendant): '+SG[Math.floor(S.asc/30)]+' '+dm(S.asc%30)+(S.tu?' (approximate)':'')+'<br>Moon sign (Rashi): '+SG[Math.floor(S.lon[1]/30)]+'<br>Nakshatra: '+nk(S.lon[1])+'<br>Sun sign: '+SG[Math.floor(S.lon[0]/30)];
+$('ct').textContent={D1:'D1 – Lagna chart (Rashi)',Moon:'Moon chart (Chandra Lagna)',Gochar:'Transit (Gochar): today\'s planets, from the ascendant',Chalit:'Chalit (Bhava Chalit)'}[mode]||mode+(VNAME[+mode.slice(1)]?' ('+VNAME[+mode.slice(1)]+')':'')+' chart';
+$('chart').innerHTML=sty=='n'?north(c):south(c);
+let t='<tr><th>Planet<th>Sign<th>Degree<th>House'+(mode=='D1'?'<th>Nakshatra-Pada':'')+'</tr>';
+t+=`<tr><td>Ascendant<td>${SG[c.a]}<td>${mode=='D1'?dm(S.asc%30):''}<td>1${mode=='D1'?'<td>'+nk(S.asc):''}</tr>`;
+c.p.forEach(p=>t+=`<tr><td>${PF[p.n]}${p.r?' (R)':''}<td>${SG[mode=='Chalit'?Math.floor(S.lon[p.n]/30):p.s]}<td>${p.d!=null?dm(p.d):''}<td>${hs(c,p)}${mode=='D1'?'<td>'+nk(S.lon[p.n]):''}</tr>`);
+$('tb').innerHTML=t;$('sr').textContent='Sunrise '+S.sr[0]+', Sunset '+S.sr[1]+' (local time)';stShow();
+$('av').innerHTML='<tr><th>Planet'+[...Array(12)].map((_,i)=>'<th>'+(i+1)).join('')+'<th>Total</tr>'+S.av.B.map((r,i)=>`<tr><td>${PF[i]}`+r.map(v=>'<td>'+v).join('')+`<td>${sum(r)}</tr>`).join('')+'<tr><td><b>Sarvashtaka (SAV)</b>'+S.av.sav.map(v=>'<td><b>'+v+'</b>').join('')+`<td><b>${sum(S.av.sav)}</b></tr>`;pstTable();hTable();sTable();yTable();dsTable();mtFill();dash();a11y();build()}
+function mtFill(){const k=Object.keys(pl()),v=$('mt').value;$('mt').innerHTML='';$('mt').add(new Option('\u2014 none \u2014',''));k.forEach(x=>$('mt').add(new Option(x,x)));$('mt').value=k.includes(v)?v:''}
+const AVT=[['1,2,4,7,8,9,10,11','3,6,10,11','1,2,4,7,8,9,10,11','3,5,6,9,10,11,12','5,6,9,11','6,7,12','1,2,4,7,8,9,10,11','3,4,6,10,11,12'],
+['3,6,7,8,10,11','1,3,6,7,10,11','2,3,5,6,9,10,11','1,3,4,5,7,8,10,11','1,4,7,8,10,11,12','3,4,5,7,9,10,11','3,5,6,11','3,6,10,11'],
+['3,5,6,10,11','3,6,11','1,2,4,7,8,10,11','3,5,6,11','6,10,11,12','6,8,11,12','1,4,7,8,9,10,11','1,3,6,10,11'],
+['5,6,9,11,12','2,4,6,8,10,11','1,2,4,7,8,9,10,11','1,3,5,6,9,10,11,12','6,8,11,12','1,2,3,4,5,8,9,11','1,2,4,7,8,9,10,11','1,2,4,6,8,10,11'],
+['1,2,3,4,7,8,9,10,11','2,5,7,9,11','1,2,4,7,8,10,11','1,2,4,5,6,9,10,11','1,2,3,4,7,8,10,11','2,5,6,9,10,11','3,5,6,12','1,2,4,5,6,7,9,10,11'],
+['8,11,12','1,2,3,4,5,8,9,11,12','3,4,6,9,11,12','3,5,6,9,11','5,8,9,10,11','1,2,3,4,5,8,9,10,11','3,4,5,8,9,10,11','1,2,3,4,5,8,9,11'],
+['1,2,4,7,8,10,11','3,6,11','3,5,6,10,11,12','6,8,9,10,11,12','5,6,11,12','6,11,12','3,5,6,11','1,3,4,6,10,11']];
+const sum=a=>a.reduce((x,y)=>x+y,0);
+function avk(){const as=Math.floor(S.asc/30),src=[...S.lon.slice(0,7).map(l=>Math.floor(l/30)),as],
+B=AVT.map(r=>{const b=Array(12).fill(0);r.forEach((h,k)=>h.split(',').forEach(x=>b[(src[k]+ +x-1)%12]++));return b.map((_,i)=>b[(as+i)%12])}),sav=B[0].map((_,i)=>B.reduce((a,r)=>a+r[i],0));
+return{B,sav,txt:B.map((r,i)=>PF[i]+' ('+sum(r)+'): '+r.join(' ')).join('\n')+'\nSarvashtakavarga SAV ('+sum(sav)+'): '+sav.join(' ')}}
+function sunrs(){const{y,m,d,lat,glon:lon,tz}=S,K=360.98564736629;
+const sd=t=>{const T=(t-2451545)/36525,l=(pos(t)[0]+ay(T))*R,ep=(23.4392911-.0130042*T)*R;return[Math.atan2(Math.cos(ep)*Math.sin(l),Math.cos(l))/R,Math.asin(Math.sin(ep)*Math.sin(l))]};
+const ha=t=>((280.46061837+K*(t-2451545)+lon-sd(t)[0]+540)%360+360)%360-180;
+let tr=JD(y,m,d,12-lon/15);for(let i=0;i<4;i++)tr-=ha(tr)/K;
+const f=sg=>{let t=tr;for(let i=0;i<4;i++){const dc=sd(t)[1],c=(Math.sin(-.833*R)-Math.sin(lat*R)*Math.sin(dc))/(Math.cos(lat*R)*Math.cos(dc));if(Math.abs(c)>1)return null;t=tr+sg*Math.acos(c)/R/360}return t};
+const fm=t=>{if(t==null)return'Not available';const h=((((t+.5)%1)*24+tz)%24+24)%24,H=Math.floor(h),M=Math.floor((h-H)*60);return String(H).padStart(2,'0')+':'+String(M).padStart(2,'0')+':'+String(Math.min(59,Math.round(((h-H)*60-M)*60))).padStart(2,'0')};
+return[fm(f(-1)),fm(f(1))]}
+function dasha(){const u=360/27,m=S.lon[1],k=Math.floor(m/u),fr=m%u/u,l0=k%9,Y=365.25*864e5,fd=t=>new Date(t).toISOString().slice(0,10);
+let t=S.birth-fr*DY[l0]*Y,cur,o='Vimshottari Mahadasha (the first period is the balance remaining at birth):\n';
+for(let i=0;i<9;i++){const l=(l0+i)%9,e=t+DY[l]*Y;o+=`- ${DL[l]}: ${fd(t)} to ${fd(e)}\n`;if(S.now>=t&&S.now<e)cur=[l,t,e];t=e}
+if(cur){const[l,a]=cur;let s=a,ca;o+=`\nCurrent Mahadasha: ${DL[l]}\nAntardashas within ${DL[l]} Mahadasha:\n`;
+for(let j=0;j<9;j++){const sl=(l+j)%9,len=DY[l]*DY[sl]/120*Y,e=s+len,on=S.now>=s&&S.now<e;o+=`- ${DL[sl]}: ${fd(s)} to ${fd(e)}${on?' <= CURRENT':''}\n`;if(on)ca=[sl,s,len];s=e}
+if(ca){let p=ca[1];for(let j=0;j<9;j++){const pl=(ca[0]+j)%9,len=ca[2]*DY[pl]/120,e=p+len;if(S.now>=p&&S.now<e){o+=`Current Pratyantar dasha: ${DL[pl]} (${fd(p)} to ${fd(e)})\n`;break}p=e}}}
+return o}
+function build(){if(!S)return;const cat=CAT[$('cat').value],A=S.asc,as=Math.floor(A/30),L=S.lon,fd=(q=>q.getFullYear()+'-'+String(q.getMonth()+1).padStart(2,'0')+'-'+String(q.getDate()).padStart(2,'0'))(new Date(S.now)),tech=$('ans').value=='tech';
+const df=(m)=>{const c=cd(m);return c.p.map(p=>`- ${PF[p.n]}${p.r?' (retrograde)':''}: ${SG[p.s]}${p.d!=null?' '+dm(p.d):''}, house ${hs(c,p)}`).join('\n')};
+const pre=/^\d/.test(S.sr[0])&&S.tm<S.sr[0].slice(0,5),dd=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][(new Date(S.y,S.m-1,S.d).getDay()+(pre?6:0))%7],df2=N(L[1]-L[0]),ti=Math.floor(df2/12),kr=Math.floor(df2/6);
+const tn=ti==14?'Purnima':ti==29?'Amavasya':TT[ti%15],kn=kr==0?'Kimstughna':kr==57?'Shakuni':kr==58?'Chatushpada':kr==59?'Naga':KM[(kr-1)%7];
+const TS=[
+`# ROLE`,
+`You are an expert Vedic astrologer (Jyotish) trained in the Parashari tradition. Analyze the birth chart data below silently and use ONLY that data. Do not recalculate positions, do not assume or invent any placement that is not listed, and do not ask for more information.`,
+``,
+`# RESPONSE LANGUAGE (overrides every other language instruction)`,
+`Write your ENTIRE answer in simple, natural Hindi in Devanagari script, the way a caring friend would speak. Reply in Hindi even if the question is written in English or Hinglish. Use everyday Hindi words and avoid heavy, formal Sanskrit vocabulary.`,
+``,
+`# AUDIENCE AND STYLE`,
+`The reader knows nothing about astrology. Your answer must contain NO astrological terms: do not mention planets, houses, signs, nakshatras, dashas, yogas, transits, the chart, or astrology itself. Never explain how you reached your conclusion. Be warm, practical and honest. Avoid fear-based or alarming statements and do not make absolute predictions.`,
+``,
+`# ANSWER STRUCTURE`,
+`1. Direct answer: answer the question first in 1-2 sentences.`,
+`2. Explanation: in plain everyday language, describe how the situation is likely to unfold and what may come next.`,
+`3. Timing: give rough timing in calendar terms (for example "over the next 6-12 months"). Never mention dasha names or planetary periods.`,
+`4. Practical steps: 3-5 simple, actionable points on what to do and what to avoid.`,
+`5. Closing: one short, honest line saying this is guidance, not a guarantee.`,
+`Keep the answer short, personal and in small paragraphs.`
+].join('\n')+'\n\n';
+const TT2=[
+`# ROLE`,
+`You are an expert Vedic astrologer (Jyotish) trained in the Parashari tradition. Use ONLY the chart data below (sidereal zodiac, Lahiri ayanamsa, whole-sign houses, Vimshottari dasha). Do not recalculate positions, do not invent placements that are not listed, and do not ask for more information.`,
+``,
+`# RESPONSE LANGUAGE (overrides every other language instruction)`,
+`Write your ENTIRE answer in Hindi (Devanagari script), even if the question is written in English or Hinglish. Write astrological terms in Devanagari using their standard Hindi/Sanskrit names (for example: लग्न, भाव, राशि, नक्षत्र, महादशा, अंतर्दशा, गोचर), and keep all explanations in clear, simple Hindi.`,
+``,
+`# TASK`,
+`Give a detailed reading on the topic and question given below. Cover, as relevant:`,
+`1. The relevant houses, their lords, and the natural significators (karakas) for the topic.`,
+`2. The matching divisional (varga) charts and the Ashtakavarga strength of the relevant houses.`,
+`3. The current Mahadasha / Antardasha / Pratyantar dasha and the current transits (gochar), including transits from the natal Moon.`,
+`4. Likely time windows, with the reasoning behind them.`,
+`5. Practical remedies and guidance.`,
+`6. An honest statement of uncertainty and limitations.`,
+`Support every conclusion with specific placements from the data. Clearly separate strong indications from weak or mixed ones. Do not make absolute predictions and avoid fear-based statements.`
+].join('\n')+'\n\n';
+let o=tech?TT2:TS;
+o+=RULES+LEN[$('ml').value]+`# TOPIC AND QUESTION\nTopic: ${cat[0]}\nUser's question / context: ${$('q').value.trim()||'(none, give a general reading for this topic)'}\n\n# CHART DATA\n\n`;
+o+=`== BIRTH DETAILS ==\nName: ${$('nm').value||'-'}\n${$('gn').value?'Gender: '+(GN[$('gn').value]||$('gn').value)+'\n':''}Date and time of birth: ${S.y}-${String(S.m).padStart(2,'0')}-${String(S.d).padStart(2,'0')} ${S.tm} (UTC${S.tz>=0?'+':''}${S.tz}), ${S.place}, latitude ${S.lat}, longitude ${S.glon}${S.tu?'\nBirth time is APPROXIMATE ('+TUL[S.tu]+').\nWARNING: because the birth time is approximate, the accuracy of the ascendant, houses, Chalit, divisional charts and antardashas is reduced. Do not rely on them heavily. Base the reading mainly on the Moon sign, Moon nakshatra and Mahadasha for general trends, and state clearly in your answer that the birth time is approximate.':''}\nToday's date: ${fd}\n\n`;
+o+=`== PANCHANG ==\nWeekday (vara, changes at sunrise): ${dd}${pre?" (born before local sunrise, so the previous civil day\'s weekday applies)":""}\nTithi: ${ti<15?'Shukla':'Krishna'} ${tn}\nMoon nakshatra: ${nk(L[1])}\nYoga: ${YG[Math.floor(N(L[0]+L[1])/(360/27))]}\nKarana: ${kn}\nSunrise: ${S.sr[0]}, Sunset: ${S.sr[1]} (local time)\n\n`;
+o+=`== D1 (Rashi chart) ==\nAscendant (Lagna): ${SG[as]} ${dm(A%30)}, nakshatra ${nk(A)}\n`+L.map((l,i)=>`- ${PF[i]}${S.rt[i]?' (retrograde)':''}: ${SG[Math.floor(l/30)]} ${dm(l%30)}, ${nk(l)}, house ${(Math.floor(l/30)-as+12)%12+1}`).join('\n')+'\n\n';
+const sh=$('ml').value=='s',ttx=tText();$('tt').innerHTML=ttx.split('\n').filter(Boolean).map(x=>'<div class="vk-n">'+x.replace(/</g,'&lt;')+'</div>').join('');$('mr').innerHTML=mText().split('\n').filter(Boolean).map(x=>'<div class="vk-n">'+x.replace(/</g,'&lt;')+'</div>').join('');o+=fText()+pstText()+(sh?'':hText()+sText())+yText()+ttx+mText();const ms=Math.floor(L[1]/30);o+=`== MOON CHART (Chandra Lagna) ==\nMoon sign: ${SG[ms]}. Houses of the planets counted from the Moon: `+L.map((l,i)=>`${PF[i]} house ${(Math.floor(l/30)-ms+12)%12+1}`).join(', ')+'\n\n';
+o+=`== KEY HOUSES FOR ${cat[0].toUpperCase()} (D1) ==\n`+cat[2].map(h=>{const s=(as+h-1)%12,lr=LORD[s],li=PF.indexOf(lr),ls=Math.floor(L[li]/30),oc=L.map((l,i)=>Math.floor(l/30)==s?PF[i]:'').filter(Boolean);return`- House ${h} ${SG[s]}: lord ${lr}, placed in ${SG[ls]} (house ${(ls-as+12)%12+1}); planets in it: ${oc.join(', ')||'none'}`}).join('\n')+'\n\n';
+if(!sh)cat[1].forEach(n=>{o+=`== D${n} (${VNAME[n]||'divisional'} chart, ${SG[V(A,n)]} ascendant) ==\n${df('D'+n)}\n\n`});
+o+=`== ASHTAKAVARGA (points in houses 1-12 counted from the ascendant; Bhinnashtakavarga BAV for Sun to Saturn, then Sarvashtakavarga SAV) ==\n${S.av.txt}\n\n${chText()}\n\n== TRANSITS (planets today, ${fd}; houses from the birth ascendant) ==\n${df('Gochar')}\nTransit houses from the natal Moon: ${S.tr.map((l,i)=>PF[i]+' house '+((Math.floor(l/30)-ms+12)%12+1)).join(', ')}\n\n== DASHA ==\n${dasha()}${dashaPlus()}\nNote: Lahiri ayanamsa. Positions are computed (Moon, Sun and inner planets within about 1 arcminute; Jupiter and Saturn within a few arcminutes), so treat planets very close to a sign or nakshatra boundary with care. Rahu/Ketu are the ${NODE=='t'?'true (actual) nodes':'mean nodes'}.`;
+o+=tech?`\n\nFINAL REMINDER: Write the entire answer in Hindi (Devanagari script), including the astrological terms.`:`\n\nFINAL REMINDER: Write the entire answer in simple Hindi (Devanagari script) and use no astrological terms.`;
+$('out').value=o}
+$('cat').onchange=build;$('mt').onchange=build;$('ml').onchange=build;$('nd').onchange=()=>{if(S)$('go').click()};$('ans').onchange=build;let bt=0;const bd=()=>{clearTimeout(bt);bt=setTimeout(()=>{bt=0;build()},180)};window.vkFlush=()=>{if(bt){clearTimeout(bt);bt=0;build()}};$('q').oninput=bd;$('nm').oninput=bd;
+$('cp').onclick=()=>{window.vkFlush();const t=$('out');t.focus();t.select();try{t.setSelectionRange(0,t.value.length)}catch(e){}(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).catch(()=>document.execCommand('copy'));$('cp').textContent='Copied ✓';setTimeout(()=>$('cp').textContent='Copy prompt',1800)};
+const PK='vk_profiles_v1',pl=()=>{try{return JSON.parse(localStorage.getItem(PK))||{}}catch(e){return{}}},pw=o=>{try{localStorage.setItem(PK,JSON.stringify(o))}catch(e){}};
+function pfRender(sel){const k=Object.keys(pl());$('pfw').hidden=!k.length;$('pf').innerHTML='';$('pf').add(new Option('+ New profile',''));
+k.forEach(n=>{const o=new Option(n,n);o.dataset.nt=1;$('pf').add(o)});$('pf').value=sel||'';$('pd').hidden=!sel}
+function saveP(){const o=pl(),k=$('nm').value.trim()||(S.place.split(',')[0]+' '+$('dt').value);
+o[k]={nm:$('nm').value,gn:$('gn').value,dt:$('dt').value,tm:$('tm').value,pq:$('pq').value,lat:$('lat').value,lon:$('lon').value,tz:$('tz').value,tu:$('tu').value,ZN,ZP};pw(o);pfRender(k)}
+$('pf').onchange=()=>{const k=$('pf').value,p=pl()[k]||{};$('nm').value=p.nm||'';$('gn').value=p.gn||'';$('dt').value=p.dt||'';$('tm').value=p.tm||'';$('pq').value=p.pq||'';$('lat').value=p.lat||'';$('lon').value=p.lon||'';$('tz').value=p.tz||'';$('tu').value=p.tu||'';$('tzw').hidden=true;
+ZN=p.ZN||null;ZP=p.ZP||'';$('pm').textContent=ZP?ZP+' ('+p.lat+', '+p.lon+')':'';$('pm').style.color='';$('pd').hidden=!k};
+$('pd').onclick=()=>{const o=pl();delete o[$('pf').value];pw(o);$('pf').value='';$('pf').onchange();pfRender('')};
+/*==PART-1 SELFTEST==*/
+function selfTest(){const r=[],t=(n,ok)=>r.push([n,!!ok]),near=(a,b,e)=>Math.abs(((a-b+540)%360+360)%360-180)<e,tj=jd=>jd-dTs(jd)/864e2,tr=jd=>(jd-2451545)/36525;
+let T=tr(2448724.5);t('Moon position (Meeus ex. 47.a)',near(moon(T)+ay(T),133.162655,.01));
+let j=tj(2448908.5);t('Sun position (Meeus ex. 25.a)',near(pos(j)[0]+ay(tr(j)),199.90895,.02));
+j=tj(2448976.5);t('Venus position (Meeus ex. 33.a)',near(pos(j)[5]+ay(tr(j)),313.081,.05));
+t('Julian Day of 2000-01-01 12:00',JD(2000,1,1,12)==2451545);
+t('Ashtakavarga totals 48,49,39,54,56,52,39 (SAV 337)',AVT.map(a=>a.reduce((x,h)=>x+h.split(',').length,0)).join()=='48,49,39,54,56,52,39');
+t('Navamsa rules',V(0,9)==0&&V(3.7,9)==1&&V(35,9)==10);
+t('Vimshottari cycle is 120 years',sum(DY)==120);
+const nn=NODE,q=2448724.5;NODE='m';const a=pos(q);NODE='t';const b=pos(q);NODE=nn;
+t('Ketu is opposite Rahu',near(a[8],a[7]+180,1e-6));t('True node within 2 deg of mean node',Math.abs(((b[7]-a[7]+540)%360)-180)<2);
+t('Sidereal time at Greenwich (Meeus ex. 12.b)',near(gst(2446896.30625),128.7378734,.001));
+{let ok=1,A,M,c;for(let k=0;k<60;k++){const jd=2451545+k*.37;A=asc(jd,28.6,77.2);M=mcL(jd,77.2);const d=N(A-M);if(!(d>0&&d<180))ok=0;
+c=cusps(A,M);let sm=0;for(let h=0;h<12;h++){const g=N(c[(h+1)%12]-c[h]);sm+=g;if(!(g>0)||bh(c[h],c)!=h+1)ok=0}if(Math.abs(sm-360)>1e-6||!near(c[3],M+180,1e-9)||!near(c[6],A+180,1e-9)||!near(c[9],M,1e-9))ok=0}
+t('Cusps: Asc east of MC, arcs sum to 360, IC/DSC opposite, each centre in its own bhava',ok)}
+{const A=100,M=10,c=cusps(A,M),mid=N(c[11]+N(c[0]-c[11])/2);t('Bhava boundary: 12th/1st split at midpoint of the two centres',bh(mid-.01,c)==12&&bh(mid+.01,c)==1)}
+const Z=(a={})=>{const l=Array(9).fill(0);Object.keys(a).forEach(k=>l[k]=a[k]);return l};
+t('Dignity: exalted, debilitated, own, moolatrikona',dig(0,Z({0:10}))=='Exalted'&&dig(6,Z({6:10}))=='Debilitated'&&dig(2,Z({2:215}))=='Own sign'&&dig(5,Z({5:185}))=='Moolatrikona');
+t('Dignity: Jupiter in Aries, Mars in Taurus = great friend',dig(4,Z({4:15,2:45}))=='Great friend sign');
+t('Combustion orbs',cmb(3,Z({0:100,3:105}),[])&&!cmb(5,Z({0:100,5:112}),[])&&cmb(1,Z({0:100,1:111}),[]));
+t('Aspects Mars 4/7/8, Saturn 3/7/10',asp(2,Z(),0).hs.join()=='4,7,8'&&asp(6,Z(),0).hs.join()=='3,7,10');
+t('Yogakaraka: Mars for Cancer, Saturn for Libra',func(rl(2,3))=='Yogakaraka'&&func(rl(6,6))=='Yogakaraka');
+t('Functional nature for Aries: Saturn mild malefic, Jupiter benefic',func(rl(6,0))=='Mild functional malefic'&&func(rl(4,0))=='Functional benefic');
+t('Neecha Bhanga rule',nb(6,Z({6:10,2:100}),0).includes('present')&&nb(6,Z({6:10,2:70,5:40}),0).includes('No Neecha'));
+{const b=Date.UTC(2000,0,1),ng=(o,c)=>Math.abs(c.e-c.s-(o.e-o.s)*DY[c.l]/120)<1e3&&c.s>=o.s-1&&c.e<=o.e+1;
+const A=dasInfo(b,0,b+1e3),B=dasInfo(b,100,b+20.3*YD),C=dasInfo(b,6.6666667,b+864e5);
+t('Dasha: first period Ketu at 0 deg Aries, nesting MD>AD>PD>SD, 120-year span, balance at birth',A.md.l==0&&A.sd.l==0&&Math.abs(A.md.e-A.md.s-7*YD)<1e4&&ng(B.md,B.ad)&&ng(B.ad,B.pd)&&ng(B.pd,B.sd)&&Math.abs(B.mds[8].e-B.mds[0].s-120*YD)<1e4&&Math.abs(C.md.e-b-3.5*YD)<1e5)}
+const G=(Y,n)=>Y.find(y=>y.n.indexOf(n)==0),yg=(a,asc,ts)=>yogas(Z(a),asc,[],ts||0);
+t('Yoga: Gajakesari rule',G(yg({1:0,4:95},0),'Gajakesari').f&&!G(yg({1:0,4:35},0),'Gajakesari').f);
+t('Yoga: Hamsa and Ruchaka need own/exalted sign in a kendra',G(yg({4:95},0),'Hamsa').f&&!G(yg({4:95},60),'Hamsa').f&&G(yg({2:280},0),'Ruchaka').f);
+t('Dosha: Manglik houses',G(yg({2:180},0),'Manglik').f&&!G(yg({2:60},0),'Manglik').f);
+t('Dosha: Kaal Sarp needs all seven on one side',G(yg({7:0,8:180,0:10,1:20,2:30,3:40,4:50,5:60,6:70},0),'Kaal Sarp').f&&!G(yg({7:0,8:180,0:10,1:20,2:30,3:40,4:50,5:60,6:200},0),'Kaal Sarp').f);
+t('Dosha: Sade Sati and Dhaiya from natal Moon',G(yg({},0,340),'Sade Sati').f&&G(yg({},0,100),'Shani Dhaiya').f&&!G(yg({},0,200),'Sade Sati').f&&!G(yg({},0,200),'Shani Dhaiya').f);
+{const b={1:100,2:160,3:220,4:250,5:310,6:340,0:20};t('Yoga: Kemadruma and its cancellation',G(yg(b,30),'Kemadruma').f&&!G(yg(Object.assign({},b,{5:190}),30),'Kemadruma').f)}
+{const cu=cusps(100,10),sbq=a=>sbal(Z(a),cu);
+t('Strength: Uchcha bala is 60 at the exaltation point and 0 at the debilitation point',Math.abs(sbq({0:10})[0].u-60)<1e-9&&sbq({0:190})[0].u<1e-9);
+t('Strength: Dig bala is 60 at the strong cusp and 0 at the opposite cusp (Jupiter 1st, Saturn 7th)',Math.abs(sbq({4:cu[0]})[4].d-60)<1e-9&&sbq({4:cu[6]})[4].d<1e-9&&Math.abs(sbq({6:cu[6]})[6].d-60)<1e-9);
+t('Strength: Kendra bala 60 / 30 / 15',sbq({0:cu[9]})[0].k==60&&sbq({0:cu[1]})[0].k==30&&sbq({0:cu[2]})[0].k==15);
+t('Kakshya order Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon, Lagna',[0,3.76,7.6,11.3,15,18.8,22.6,29.99].map(kak).join()=='6,4,2,0,5,3,1,7');
+{const p=pos(2451545),src=p.slice(0,7).map(sg30).concat([sg30(asc(2451545,28.6,77.2))]);let tot=0;for(let a=0;a<7;a++){let pt=0;for(let q=0;q<8;q++)for(let g=0;g<12;g++)pt+=bnd(a,q,g,src);tot+=pt;if(pt!=[48,49,39,54,56,52,39][a])tot=-1e9}t('Prastara bindu function reproduces BAV totals (337)',tot==337)}
+{const L=pos(2451545),v=vimsh(L);t('Vimshopaka stays within 5-20 and own/exalted/debilitated points are 20/20/5',v.every(x=>x>=5&&x<=20)&&digS(6,10,L)==20&&digS(0,0,L)==20&&digS(6,0,L)==5)}}
+/*==PART-7 SELFTEST==*/
+{const nr=(x,y,m,d,e)=>Math.abs(x-Date.UTC(y,m-1,d))<e*MS,ing=(p,y,m,d,w)=>scan(p,Date.UTC(y,m-1,d-w),Date.UTC(y,m-1,d+w),MS).ev[0],a=ing(4,2024,5,1,10),b=ing(6,2023,1,17,10),c=ing(7,2023,10,30,15),q=scan(6,Date.UTC(2025,5,1),Date.UTC(2025,7,30),MS).stn[0];
+t('Transit: Jupiter enters Taurus ~2024-05-01 and Saturn enters Aquarius ~2023-01-17 (published sidereal ingress dates, +-2 days)',a&&a.to==1&&nr(a.t,2024,5,1,2)&&b&&b.to==10&&nr(b.t,2023,1,17,2));
+t('Transit: mean Rahu enters Pisces ~2023-10-30 (+-3 days) and Saturn stations retrograde ~2025-07-13 (+-2 days)',c&&c.to==11&&nr(c.t,2023,10,30,3)&&q&&q.r==1&&nr(q.t,2025,7,13,2));
+t('Double transit sets: Jupiter 1/5/7/9 and Saturn 1/3/7/10 from own house, wrapping past 12',inf(1,4).join()=='1,5,7,9'&&inf(1,6).join()=='1,3,7,10'&&inf(12,4).join()=='12,4,6,8')}
+/*==END PART-7 SELFTEST==*/
+/*==PART-8 SELFTEST==*/
+{const u=360/27,sc=a=>a.map(r=>r[2]).join(),n=(a,b)=>ash(a*u+1,b*u+1);
+t('Matching: identical Moon gives Varna 1, Vashya 2, Tara 3, Yoni 4, Maitri 5, Gana 6, Bhakoot 7, Nadi 0 (total 28)',sc(ash(10,10))=='1,2,3,4,5,6,7,0');
+t('Matching: Nadi (Ashwini and Ardra same = 0, Ashwini and Bharani = 8) and Bhakoot (8th = 0, 10th = 7)',n(0,5)[7][2]==0&&n(0,1)[7][2]==8&&ash(1,151)[6][2]==0&&ash(1,91)[6][2]==7);
+t('Matching: Yoni sworn enemies Serpent and Mongoose = 0, Horse and Horse = 4; Tara with one bad remainder = 1.5',n(3,20)[3][2]==0&&n(0,23)[3][2]==4&&ash(2*u+1,1)[2][2]==1.5);
+t('Matching: Gana table has 9 Deva, 9 Manushya, 9 Rakshasa nakshatras',GA.length==27&&['D','M','R'].every(x=>GA.split(x).length==10))}
+/*==END PART-8 SELFTEST==*/
+/*==PART-9 SELFTEST==*/
+{const sv=S;try{const jd=2451545,a=asc(jd,28.6,77.2);S={y:2000,m:1,d:1,tm:'12:00',place:'Test',lon:pos(jd),asc:a,rt:retro(jd),tr:pos(jd+30),birth:Date.UTC(2000,0,1,12),now:Date.UTC(2026,0,1),tu:'',cu:cusps(a,mcL(jd,77.2))};S.av=avk();S.t7={iv:[{d:[1]}]};const L=dsum();
+t('Report summary: 8 lines, no NaN/undefined/Infinity, dasha line present',L.length==8&&!/NaN|undefined|Infinity/.test(L.join())&&/Dasha now: \w+ > /.test(L[2]))}finally{S=sv}}
+/*==END PART-9 SELFTEST==*/
+return r}
+const ST=selfTest();ST.filter(x=>!x[1]).forEach(x=>console.warn('Self-test failed:',x[0]));
+function stShow(){const f=ST.filter(x=>!x[1]);$('st').style.color=f.length?'#b3261e':'';$('st').textContent=f.length?'\u26a0 Engine self-test failed: '+f.map(x=>x[0]).join('; ')+'. Do not rely on this chart.':'\u2714 Engine self-test: '+ST.length+'/'+ST.length+' checks passed (planet positions vs published reference values, Ashtakavarga, Navamsa, houses, dasha, yogas, strength, transit dates, matching tables, report summary).'}
+/*==END PART-1 SELFTEST==*/
+pfRender('');
+})();
+</script>
+
+<script>
+(function(){
+var g=function(i){return document.getElementById(i)};
+var MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var TP={m:'09:00',a:'14:00',e:'18:00',n:'22:00',l:'03:00',x:'12:00'};
+function opt(s,v,t){var o=document.createElement('option');o.value=v;o.textContent=t;s.appendChild(o)}
+var dd=g('vk-dd'),dm=g('vk-dm'),th=g('vk-th'),tmn=g('vk-tmn');
+opt(dd,'','Day');for(var i=1;i<=31;i++)opt(dd,String(i),String(i));
+opt(dm,'','Month');MN.forEach(function(n,i){opt(dm,String(i+1),n)});
+opt(th,'','Hour');for(i=1;i<=12;i++)opt(th,String(i),String(i));
+opt(tmn,'','Minute');for(i=0;i<60;i++)opt(tmn,String(i),(i<10?'0':'')+i);
+function pad(n){return(n<10?'0':'')+n}
+function setVal(id,v){var el=g(id);if(el.value!==v){el.value=v;el.dispatchEvent(new Event('input'))}}
+function pushDate(){var d=dd.value,m=dm.value,y=g('vk-dy').value.replace(/\D/g,''),v='';
+if(d&&m&&y.length===4){var Y=+y,now=new Date();if(Y>=1900&&Y<=now.getFullYear()){var t=new Date(Y,m-1,+d);if(t.getFullYear()===Y&&t.getMonth()===m-1&&t.getDate()===+d&&t<=now)v=Y+'-'+pad(+m)+'-'+pad(+d)}}
+setVal('vk-dt',v)}
+function pushTime(){var v='';
+if(g('vk-tkn').checked){var k=g('vk-tup').value||'x';v=TP[k];setVal('vk-tu',k)}
+else{setVal('vk-tu','');var h=th.value,mi=tmn.value,ap=g('vk-tap').value;if(h&&mi!==''&&ap){v=pad((+h%12)+(ap==='PM'?12:0))+':'+pad(+mi)}}
+setVal('vk-tm',v)}
+function view(){var u=g('vk-tkn').checked;g('vk-tuw').hidden=!u;g('vk-tbox').hidden=u}
+[dd,dm].forEach(function(e){e.addEventListener('change',pushDate)});
+g('vk-dy').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,4);pushDate()});
+[th,tmn,g('vk-tap'),g('vk-tup')].forEach(function(e){e.addEventListener('change',pushTime)});
+g('vk-tkn').addEventListener('change',function(){view();pushTime()});
+function fromHidden(){var dv=g('vk-dt').value,tv=g('vk-tm').value,tu=g('vk-tu').value;
+if(/^\d{4}-\d{2}-\d{2}$/.test(dv)){var p=dv.split('-');g('vk-dy').value=p[0];dm.value=String(+p[1]);dd.value=String(+p[2])}else{g('vk-dy').value='';dm.value='';dd.value=''}
+g('vk-tkn').checked=!!tu;if(tu)g('vk-tup').value=tu;
+if(!tu&&/^\d{2}:\d{2}$/.test(tv)){var q=tv.split(':'),H=+q[0];g('vk-tap').value=H>=12?'PM':'AM';th.value=String(H%12===0?12:H%12);tmn.value=String(+q[1])}else if(!tu){th.value='';tmn.value='';g('vk-tap').value=''}
+view()}
+['vk-pf'].forEach(function(id){var el=g(id);if(el)el.addEventListener('change',function(){setTimeout(fromHidden,0)})});
+var pd=g('vk-pd');if(pd)pd.addEventListener('click',function(){setTimeout(fromHidden,0)});
+window.vkDtErr=function(){var d=dd.value,m=dm.value,y=g('vk-dy').value.replace(/\D/g,'');
+if(!d||!m||!y)return'Please choose your full date of birth: day, month and year (4 digits, e.g. 1995).';
+if(!g('vk-dt').value)return'This date does not look right. Please check the day, month and year again.';
+return'Please choose your time of birth: hour, minute and AM/PM. If you do not know the time, tick "I do not know my exact birth time".'};
+view();
+})();
+</script>
+<script>
+/* ============ AD SETTINGS - edit only this part ============
+   1) client : your AdSense publisher ID, e.g. 'ca-pub-1234567890123456'
+   2) slots  : the ad unit ID (data-ad-slot number) for each place.
+               top    = below the notice, above the tool (seen by every visitor)
+               mid    = after the prompt is generated, between the result and the chart
+               bottom = at the very end, after the chart tables
+   Leave a value '' to keep that place switched off. With everything empty, no ads load. */
+var VK_ADS={
+  client:'', /* AdSense off in app build */
+  slots:{top:'',mid:'',bottom:''}
+};
+/* ============ END AD SETTINGS ============ */
+(function(){
+  if(!/^ca-pub-\d+$/.test(VK_ADS.client))return;
+  var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';
+  s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+VK_ADS.client;
+  document.head.appendChild(s);
+  function show(){
+    document.querySelectorAll('.vk-ad[data-slot]').forEach(function(w){
+      var id=VK_ADS.slots[w.getAttribute('data-slot')];
+      if(w.getAttribute('data-done')||!/^\d+$/.test(id||''))return;
+      w.hidden=false;
+      if(!w.offsetParent){w.hidden=true;return}
+      w.setAttribute('data-done','1');
+      w.innerHTML='<span class="vk-adl">Advertisement</span><ins class="adsbygoogle" data-ad-client="'+VK_ADS.client+'" data-ad-slot="'+id+'" data-ad-format="auto" data-full-width-responsive="true"></ins>';
+      try{(window.adsbygoogle=window.adsbygoogle||[]).push({})}catch(e){}
+    });
+  }
+  show();
+  var r=document.getElementById('vk-res');
+  if(r&&window.MutationObserver)new MutationObserver(show).observe(r,{attributes:true,attributeFilter:['hidden']});
+})();
+</script>
+<script>
+(function(){
+var g=function(i){return document.getElementById(i)};
+function box(ok){
+g('vk-rt').textContent=ok?'Your prompt has been copied.':'Tap once more to copy the prompt';
+var p=g('vk-rp');p.textContent=ok?'':'Your browser did not allow automatic copying. Tap "Copy again".';p.hidden=!!ok;
+g('vk-ca').hidden=!!ok;g('vk-ready').hidden=false}
+function copyNow(cb){if(window.vkFlush)window.vkFlush();var t=g('vk-out'),v=t.value;
+function fb(){var r=false;try{t.focus();t.select();try{t.setSelectionRange(0,v.length)}catch(e){}r=document.execCommand('copy')}catch(e){}cb(r)}
+if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(v).then(function(){cb(true)},fb)}else fb()}
+g('vk-go').addEventListener('click',function(){
+if(g('vk-res').hidden||!g('vk-out').value)return;
+g('vk-ready').hidden=true;
+copyNow(function(ok){box(ok)})});
+g('vk-cp').addEventListener('click',function(){box(true)});
+g('vk-ca').addEventListener('click',function(){copyNow(function(ok){box(ok)})});
+g('vk-rx').addEventListener('click',function(){g('vk-ready').hidden=true});
+document.querySelectorAll('#vk a.vk-ai').forEach(function(a){a.addEventListener('click',function(){copyNow(function(ok){box(ok)})})});
+document.querySelectorAll('#vk label:not([for])').forEach(function(l){var n=l.nextElementSibling;if(n&&n.id&&/^(INPUT|SELECT|TEXTAREA)$/.test(n.tagName))l.htmlFor=n.id});
+})();
+</script>
+</body>
+</html>
